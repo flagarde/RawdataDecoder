@@ -8,7 +8,7 @@ add_library(rawdataDecoder src/Bits.cc)
 target_include_directories(rawdataDecoder PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder>)
 target_link_libraries(rawdataDecoder PUBLIC spdlog::spdlog fmt::fmt)
 set_target_properties(rawdataDecoder PROPERTIES PUBLIC_HEADER
-                      "include/Bits.h")
+                      "include/Bits.h;include/Buffer.h")
 add_library(rawdataDecoder::rawdataDecoder ALIAS rawdataDecoder)
 
 install(TARGETS rawdataDecoder spdlog EXPORT rawdataDecoderTargets INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/" PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/")
