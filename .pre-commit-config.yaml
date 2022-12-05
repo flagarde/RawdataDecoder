@@ -1,0 +1,93 @@
+---
+default_install_hook_types:
+  - pre-commit
+  - pre-merge-commit
+  - pre-push
+  - prepare-commit-msg
+  - commit-msg
+  - post-commit
+  - post-checkout
+  - post-merge
+  - post-rewrite
+
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+        args: [ --maxkb=400 ]
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-vcs-permalinks
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: double-quote-string-fixer
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+        args: [ --fix=lf ]
+      - id: trailing-whitespace
+        args: [ --markdown-linebreak-ext=md ]
+      - id: check-yaml
+        args: [ --allow-multiple-documents ]
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: check-mailmap
+        name: detect if an email address needs to be added to mailmap
+      - id: git-check
+        name: check for conflict markers and core.whitespace errors
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.3.1
+    hooks:
+      - id: remove-crlf
+      - id: remove-tabs
+        name: tabs remover
+        args: [ --whitespaces-count, '2' ]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.2
+    hooks:
+      - id: codespell
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+    rev: 0.2.2
+    hooks:
+      - id: yamlfmt
+        name: format YAML files
+        args: [ --mapping, '2', --sequence, '2', --offset, '0', --width, '250' ]
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 2.6.1
+    hooks:
+      - id: editorconfig-checker
+        name: check .editorconfig rules
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.32.2
+    hooks:
+      - id: markdownlint
+        args: [ --config=.markdownlint.yml, scan ]
+
+  - repo: https://github.com/Kr4is/cmake-format-precommit
+    rev: v0.6.14
+    hooks:
+      - id: cmake-format
+        args: [ --config=.cmake-format.yml ]
+      - id: cmake-lint
+        args: [ --config=.cmake-linter.yml ]
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v15.0.4
+    hooks:
+      - id: clang-format
+
+  - repo: https://gitlab.com/daverona/pre-commit/cpp
+    rev: 0.8.0
+    hooks:
+      - id: cpplint
