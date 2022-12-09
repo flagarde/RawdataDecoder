@@ -11,6 +11,10 @@ cmmm_modules_list(PROVIDER github REPOSITORY "SDHCAL/CMakeModules" BRANCH main D
 include(Missives)
 
 project(streamout VERSION "0.1.0" DESCRIPTION "Rawdata to LCIO for HCAL-ECAL" HOMEPAGE_URL "https://github.com/flagarde/RawdataDecoder" LANGUAGES CXX)
+
+include(Standards)
+cxx_17()
+
 option(BUILD_TESTS "Build the test" ON)
 option(BUILD_APPS "Build the apps" ON)
 option(BUILD_DOCS "Build the docs" OFF)
