@@ -8,6 +8,8 @@ cmmm(VERSION "2.3" REPOSITORY "flagarde/CMakeMM" VERBOSITY VERBOSE)
 
 cmmm_modules_list(PROVIDER github REPOSITORY "SDHCAL/CMakeModules" BRANCH main DESTINATION "Modules")
 
+include(Missives)
+
 project(streamout VERSION "0.1.0" DESCRIPTION "Rawdata to LCIO for HCAL-ECAL" HOMEPAGE_URL "https://github.com/flagarde/RawdataDecoder" LANGUAGES CXX)
 option(BUILD_TESTS "Build the test" ON)
 option(BUILD_APPS "Build the apps" ON)
