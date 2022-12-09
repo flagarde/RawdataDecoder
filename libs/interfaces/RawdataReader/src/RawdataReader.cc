@@ -1,16 +1,11 @@
 /** \file RawdataReader.cc
-*  \copyright 2022 G.Grenier F.Lagarde
+*  \copyright 2022 F.Lagarde
 */
 #include "RawdataReader.h"
 
-#include "Exception.h"
-
 #include <cstring>
-#include <stdexcept>
 
 std::size_t RawdataReader::m_BufferSize = 0x100000;
-
-void RawdataReader::setDefaultBufferSize(const std::size_t& size) { m_BufferSize = size; }
 
 RawdataReader::RawdataReader(const char* fileName) : InterfaceReader("RawdataReader", "1.0.0")
 {
@@ -60,8 +55,7 @@ bool RawdataReader::nextEvent()
 {
   try
   {
-    m_FileStream.read(reinterpret_cast<char*>(&m_EventNumber), sizeof(std::uint32_t));
-    m_FileStream.read(reinterpret_cast<char*>(&m_NumberOfDIF), sizeof(std::uint32_t));
+    return !m_FileStream.eof();
   }
   catch(const std::ios_base::failure& e)
   {
@@ -74,19 +68,43 @@ bool RawdataReader::nextDIFbuffer()
 {
   try
   {
-    static int DIF_processed{0};
-    if(DIF_processed >= m_NumberOfDIF)
+    static std::int32_t trigger_ID{-1};
+    bool                b_begin = 0;
+    bool                b_end   = 0;
+    bit8_t              buffer  = 0;
+    while(!b_begin && m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char)))
     {
-      DIF_processed = 0;
-      return false;
+      m_buf.push_back(buffer);
+      if(m_buf.size() > 4) m_buf.erase(m_buf.begin(), m_buf.begin() + m_buf.size() - 4);
+      if(m_buf[0] == 0xfa && m_buf[1] == 0x5a && m_buf[2] == 0xfa && m_buf[3] == 0x5a && m_buf.size() == 4) b_begin = 1;
     }
+    while(!b_end && m_FileStream.read((char*)(&buffer), 1))
+    {
+      m_buf.push_back(buffer);
+      int int_tmp = m_buf.size();
+      if(int_tmp >= 4 && m_buf[int_tmp - 2] == 0xfe && m_buf[int_tmp - 1] == 0xee && m_buf[int_tmp - 4] == 0xfe && m_buf[int_tmp - 3] == 0xee) b_end = 1;
+    }
+    m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
+
+    if(buffer != 0xff)
+    {
+      m_buf.clear();
+      throw 0;
+    }
+    m_buf.push_back(buffer);
+    m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
+    if(buffer < 0 || buffer > 39)
+    {
+      m_buf.clear();
+      throw 0;
+    }
+    m_buf.push_back(buffer);
+    if(trigger_ID == -1) trigger_ID = m_buf[8] * 0x100 + m_buf[9];
+    if(m_buf[8] * 0x100 + m_buf[9] == trigger_ID) return true;
     else
     {
-      DIF_processed++;
-      std::uint32_t bsize{0};
-      m_FileStream.read(reinterpret_cast<char*>(&bsize), sizeof(std::uint32_t));
-      m_FileStream.read(reinterpret_cast<char*>(&m_buf[0]), bsize);
-      m_Buffer = Buffer(m_buf);
+      trigger_ID = m_buf[8] * 0x100 + m_buf[9];
+      return false;
     }
   }
   catch(const std::ios_base::failure& e)
@@ -97,7 +115,7 @@ bool RawdataReader::nextDIFbuffer()
   return true;
 }
 
-const Buffer& RawdataReader::getBuffer() { return m_Buffer; }
+Buffer RawdataReader::getBuffer() { return m_buf; }
 
 void RawdataReader::setFileSize(const std::size_t& size) { m_FileSize = size; }
 
