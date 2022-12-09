@@ -6,4 +6,4 @@
 
 #include "Version.h"
 
-inline static const Version rawdatadecoder_version { @SEMVER_MAJOR @, @SEMVER_MINOR @, @SEMVER_PATCH @, @SEMVER_PRERELEASE @, @SEMVER_PRERELEASE_NUMBER @ };
+inline static const Version rawdatadecoder_version { @SEMVER_MAJOR@, @SEMVER_MINOR@, @SEMVER_PATCH@, @SEMVER_PRERELEASE@, @SEMVER_PRERELEASE_NUMBER@ };
