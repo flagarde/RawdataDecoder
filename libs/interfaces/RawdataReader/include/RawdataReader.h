@@ -29,6 +29,7 @@ public:
   virtual ~RawdataReader() { closeFile(); }
 
 private:
+  bool                isSameEvent();
   std::ifstream       m_FileStream;
   void                setFileSize(const std::size_t& size);
   static std::size_t  m_BufferSize;

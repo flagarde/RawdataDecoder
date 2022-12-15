@@ -64,6 +64,11 @@ void LCIOWriter::processFrame(const Data& d, const std::uint32_t& frameIndex) {}
 
 void LCIOWriter::processPadInFrame(const Data& d, const std::uint32_t& frameIndex, const std::uint32_t& channelIndex)
 {
+  /*std::cout<<"Begin :::::::::::::::::::::::::::::"<<std::endl;
+  std::cout<<d.getData().size()<<std::endl;
+  std::cout<<"Buffer :::::::::::::::::::::::::::::"<<std::endl;
+  std::cout<<d.getBuffer().size()<<std::endl;
+  std::cout<<"End :::::::::::::::::::::::::::::"<<std::endl;*/
   UTIL::CellIDEncoder<IMPL::RawCalorimeterHitImpl> cd("BCID:16,gain:1,hit:1,layer:8,chip:8,channel:8", m_CollectionVec);
   m_LCEvent->setTimeStamp(d.getTriggerID());
   m_LCEvent->setRunNumber(getRunNumber());

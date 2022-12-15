@@ -3,7 +3,10 @@
 */
 #include "RawdataReader.h"
 
+#include "Formatters.h"
+
 #include <cstring>
+#include <iostream>
 
 std::size_t RawdataReader::m_BufferSize = 0x100000;
 
@@ -61,17 +64,32 @@ bool RawdataReader::nextEvent()
   {
     return false;
   }
-  return true;
+}
+
+bool RawdataReader::isSameEvent()
+{
+  //Trigger ID is a kind of event number but it not at the same place in ECAL and HCAL so let's to the job here
+  bool isECAL{false};
+  if(m_buf.size() >= 42 && m_buf[m_buf.size() - 42] == 0xf0 && m_buf[m_buf.size() - 41] == 0x01 && m_buf[m_buf.size() - 8] == 0xf0 && m_buf[m_buf.size() - 7] == 0x02) isECAL = true;
+
+  std::int32_t        trigger_ID          = isECAL ? m_buf[m_buf.size() - 43] * 0x100 + m_buf[m_buf.size() - 44] : m_buf[8] * 0x100 + m_buf[9];
+  static std::int32_t previous_trigger_ID = trigger_ID;
+
+  if(previous_trigger_ID == trigger_ID) return true;
+  else
+  {
+    previous_trigger_ID = trigger_ID;
+    return false;
+  }
 }
 
 bool RawdataReader::nextDIFbuffer()
 {
   try
   {
-    static std::int32_t trigger_ID{-1};
-    bool                b_begin = 0;
-    bool                b_end   = 0;
-    bit8_t              buffer  = 0;
+    bool   b_begin = 0;
+    bool   b_end   = 0;
+    bit8_t buffer  = 0;
     while(!b_begin && m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char)))
     {
       m_buf.push_back(buffer);
@@ -93,26 +111,15 @@ bool RawdataReader::nextDIFbuffer()
     }
     m_buf.push_back(buffer);
     m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
-    if(buffer < 0 || buffer > 39)
-    {
-      m_buf.clear();
-      throw 0;
-    }
     m_buf.push_back(buffer);
-    if(trigger_ID == -1) trigger_ID = m_buf[8] * 0x100 + m_buf[9];
-    if(m_buf[8] * 0x100 + m_buf[9] == trigger_ID) return true;
-    else
-    {
-      trigger_ID = m_buf[8] * 0x100 + m_buf[9];
-      return false;
-    }
+
+    return isSameEvent();
   }
   catch(const std::ios_base::failure& e)
   {
     log()->error("Caught an ios_base::failure in openFile : {}", e.what());
     return false;
   }
-  return true;
 }
 
 Buffer RawdataReader::getBuffer() { return m_buf; }
