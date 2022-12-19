@@ -47,7 +47,7 @@ void ROOTWriter::processPadInFrame(const Data& d, const std::uint32_t& column, c
   _time.push_back(d.getChip().getTime(column, channelIndex).timestamp());
   _charge.push_back(d.getChip().getCharge(column, channelIndex).charge());
   _bcid.push_back(d.getChip().getBCIDs(column));
-  _cellID.push_back(d.getLayer() * 10e6 + d.getChip().getID() * 10e4 + column * 10e2 + channelIndex);
+  _cellID.push_back(d.getLayer() * 1e5 + d.getChip().getID() * 1e4 + column * 1e2 + channelIndex);
 }
 
 void ROOTWriter::startEvent() {}
