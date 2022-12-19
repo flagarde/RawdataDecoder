@@ -3,6 +3,7 @@
 */
 #include "RawdataReader.h"
 
+#include "Exception.h"
 #include "Formatters.h"
 
 #include <cstring>
@@ -29,7 +30,7 @@ void RawdataReader::closeFile()
   catch(const std::ios_base::failure& e)
   {
     log()->error("Caught an ios_base::failure in closeFile : {} {}", e.what(), e.code().value());
-    throw;
+    throw Exception(fmt::format("Caught an ios_base::failure in closeFile : {} {}", e.what(), e.code().value()));
   }
 }
 
@@ -50,7 +51,7 @@ void RawdataReader::openFile(const std::string& fileName)
   catch(const std::ios_base::failure& e)
   {
     log()->error("Caught an ios_base::failure in openFile : {}", e.what());
-    throw;
+    throw Exception(fmt::format("Caught an ios_base::failure in openFile : {}", e.what()));
   }
 }
 
@@ -69,15 +70,15 @@ bool RawdataReader::nextEvent()
 bool RawdataReader::isSameEvent()
 {
   //Trigger ID is a kind of event number but it not at the same place in ECAL and HCAL so let's to the job here
-  bool isECAL{false};
-  if(m_buf.size() >= 42 && m_buf[m_buf.size() - 42] == 0xf0 && m_buf[m_buf.size() - 41] == 0x01 && m_buf[m_buf.size() - 8] == 0xf0 && m_buf[m_buf.size() - 7] == 0x02) isECAL = true;
+  if(m_buf.size() >= 42 && m_buf[m_buf.size() - 42] == 0xf0 && m_buf[m_buf.size() - 41] == 0x01 && m_buf[m_buf.size() - 8] == 0xf0 && m_buf[m_buf.size() - 7] == 0x02) m_IsECAL = true;
 
-  std::int32_t        trigger_ID          = isECAL ? m_buf[m_buf.size() - 43] * 0x100 + m_buf[m_buf.size() - 44] : m_buf[8] * 0x100 + m_buf[9];
+  std::int32_t        trigger_ID          = m_IsECAL ? m_buf[m_buf.size() - 43] * 0x100 + m_buf[m_buf.size() - 44] : m_buf[8] * 0x100 + m_buf[9];
   static std::int32_t previous_trigger_ID = trigger_ID;
 
   if(previous_trigger_ID == trigger_ID) return true;
   else
   {
+    m_EventNumber++;
     previous_trigger_ID = trigger_ID;
     return false;
   }
@@ -104,14 +105,16 @@ bool RawdataReader::nextDIFbuffer()
     }
     m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
 
-    if(buffer != 0xff)
-    {
-      m_buf.clear();
-      throw 0;
-    }
     m_buf.push_back(buffer);
+    bit8_t toto = buffer;
     m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
     m_buf.push_back(buffer);
+
+    if(toto != 0xff)
+    {
+      //m_buf.clear();
+      throw Exception(fmt::format("bad 0xff, received {} \n This is the buffer : {}", to_hex(toto), to_hex(buffer), to_hex(m_buf)));
+    }
 
     return isSameEvent();
   }
@@ -119,6 +122,15 @@ bool RawdataReader::nextDIFbuffer()
   {
     log()->error("Caught an ios_base::failure in openFile : {}", e.what());
     return false;
+  }
+  catch(const Exception& ex)
+  {
+    static int howmany{1};
+    log()->error("Found error : {}\n Skipping ! \n It happened {} times", ex.what(), howmany);
+    m_buf.clear();
+    howmany++;
+    // skip this chips and maybe the next one as the 0xfa 0x5a have already been eaten :(
+    return true;
   }
 }
 

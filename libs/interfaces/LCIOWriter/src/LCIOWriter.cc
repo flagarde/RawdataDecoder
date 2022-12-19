@@ -62,35 +62,30 @@ void LCIOWriter::processDIF(const Data& d)
 
 void LCIOWriter::processFrame(const Data& d, const std::uint32_t& frameIndex) {}
 
-void LCIOWriter::processPadInFrame(const Data& d, const std::uint32_t& frameIndex, const std::uint32_t& channelIndex)
+void LCIOWriter::processPadInFrame(const Data& d, const std::uint32_t& column, const std::uint32_t& channelIndex)
 {
-  /*std::cout<<"Begin :::::::::::::::::::::::::::::"<<std::endl;
-  std::cout<<d.getData().size()<<std::endl;
-  std::cout<<"Buffer :::::::::::::::::::::::::::::"<<std::endl;
-  std::cout<<d.getBuffer().size()<<std::endl;
-  std::cout<<"End :::::::::::::::::::::::::::::"<<std::endl;*/
   UTIL::CellIDEncoder<IMPL::RawCalorimeterHitImpl> cd("BCID:16,gain:1,hit:1,layer:8,chip:8,channel:8", m_CollectionVec);
   m_LCEvent->setTimeStamp(d.getTriggerID());
   m_LCEvent->setRunNumber(getRunNumber());
-  IMPL::RawCalorimeterHitImpl* hit = new IMPL::RawCalorimeterHitImpl;
 
-  cd["gain"]    = d.getChip(frameIndex).gain(channelIndex);
-  cd["hit"]     = d.getChip(frameIndex).hit(channelIndex);
-  cd["layer"]   = d.getLayer();
-  cd["chip"]    = d.getChip(frameIndex).chipID();
-  cd["channel"] = channelIndex;
-  cd["BCID"]    = d.getChip(frameIndex).BCID();
+  IMPL::RawCalorimeterHitImpl* hit = new IMPL::RawCalorimeterHitImpl;
+  cd["BCID"]                       = d.getChip().getBCIDs(column);
+  cd["gain"]                       = d.getChip().getCharge(column, channelIndex).gain();
+  cd["hit"]                        = d.getChip().getCharge(column, channelIndex).hit();
+  cd["layer"]                      = d.getLayer();
+  cd["chip"]                       = d.getChip().getID();
+  cd["channel"]                    = channelIndex;
   cd.setCellID(hit);
-  //hit->setCellID1(d.getChip(frameIndex).BCID());
-  hit->setAmplitude(d.getChip(frameIndex).adc(channelIndex));
-  hit->setTimeStamp(d.getChip(frameIndex).tdc(channelIndex));
+  hit->setAmplitude(d.getChip().getCharge(column, channelIndex).charge());
+  hit->setTimeStamp(d.getChip().getTime(column, channelIndex).timestamp());
   m_CollectionVec->addElement(hit);
 }
 
 void LCIOWriter::startEvent()
 {
   m_LCEvent = std::make_unique<IMPL::LCEventImpl>();
-  m_LCEvent->setEventNumber(getEventNumber());
+  /// This event number is the vent number without empty payload
+  m_LCEvent->setEventNumber(myEventNumber);
   m_LCEvent->setDetectorName(m_DetectorName);
   m_LCEvent->setWeight(1);
   m_CollectionVec = new IMPL::LCCollectionVec(EVENT::LCIO::RAWCALORIMETERHIT);
@@ -104,8 +99,12 @@ void LCIOWriter::startEvent()
 
 void LCIOWriter::endEvent()
 {
-  m_LCEvent->addCollection(m_CollectionVec, "HCALRawHits");
-  m_LCWriter->writeEvent(m_LCEvent.get());
+  if(!m_CollectionVec->empty())
+  {
+    myEventNumber++;
+    m_LCEvent->addCollection(m_CollectionVec, "HCALRawHits");
+    m_LCWriter->writeEvent(m_LCEvent.get());
+  }
 }
 
 void LCIOWriter::startDIF() {}

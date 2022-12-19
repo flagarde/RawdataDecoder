@@ -1,4 +1,5 @@
 missive(WARN "Build with LCIO interface")
+set(LCIO_BUILD_LCIO_STANDARD_EXAMPLES TRUE)
 include(Lcio)
 add_library(LCIOWriter src/LCIOWriter.cc)
 target_include_directories(LCIOWriter PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder>)

@@ -29,6 +29,7 @@ public:
   virtual ~RawdataReader() { closeFile(); }
 
 private:
+  bool                m_IsECAL{false};
   bool                isSameEvent();
   std::ifstream       m_FileStream;
   void                setFileSize(const std::size_t& size);

@@ -39,6 +39,7 @@ public:
   virtual void endPad();
 
 private:
+  std::uint32_t                      myEventNumber{0};
   std::unique_ptr<IO::LCWriter>      m_LCWriter{nullptr};
   std::unique_ptr<IMPL::LCEventImpl> m_LCEvent{nullptr};
   IMPL::LCCollectionVec*             m_CollectionVec{nullptr};

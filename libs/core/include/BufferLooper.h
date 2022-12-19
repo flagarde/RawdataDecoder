@@ -23,8 +23,8 @@
 
 template<typename SOURCE, typename DESTINATION> void diff(SOURCE& m_Source, DESTINATION& m_Destination)
 {
-  const Buffer& buffer = m_Source.getBuffer();
-  Data          data(m_Source.getBuffer());
+  Data data(m_Source.getBuffer());
+
   if(data.empty()) return;
   /******************/
   /*** START DIF ***/
@@ -33,18 +33,19 @@ template<typename SOURCE, typename DESTINATION> void diff(SOURCE& m_Source, DEST
 
   /******************/
   m_Destination.processDIF(data);
-  for(std::size_t i = 0; i < data.getNumberChips(); ++i)
+
+  for(std::size_t column = 0; column != data.getChip().getNumberColumns(); ++column)
   {
     //
     m_Source.startFrame();
     m_Destination.startFrame();
     //
-    m_Destination.processFrame(data, i);
-    for(std::size_t j = 0; j != data.getChip(i).NumberChannels(); ++j)
+    m_Destination.processFrame(data, 0);
+    for(std::size_t j = 0; j != data.getChip().getNumberChannels(); ++j)
     {
       m_Source.startPad();
       m_Destination.startPad();
-      m_Destination.processPadInFrame(data, i, j);
+      m_Destination.processPadInFrame(data, column, j);
       m_Source.endPad();
       m_Destination.endPad();
     }
@@ -133,13 +134,13 @@ fmt::format(fg(fmt::color::red) | fmt::emphasis::bold, "v{}", rawdatadecoder_ver
       m_Source.startEvent();
       m_Destination.startEvent();
       /*******************/
-      m_Logger->warn("===*** Event {} ***===", m_NbrEvents);
+
+      m_Logger->warn("===*** Event {} ***===", m_Destination.getEventNumber());
 
       //Special case if we are in a new event the buffer has already been read
       if(m_Source.getBuffer().size() != 0) { diff(m_Source, m_Destination); }
       //std::cout<<"First Event "<<m_NbrEvents<<" "<<to_hex(a.getBuffer()[0])<<std::endl;
       while(m_Source.nextDIFbuffer()) { diff(m_Source, m_Destination); }  // end of DIF while loop
-      m_Logger->warn("===*** Event {} ***===", m_NbrEvents);
       m_NbrEvents++;
       /*****************/
       /*** END EVENT ***/
