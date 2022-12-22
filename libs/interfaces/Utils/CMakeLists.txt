@@ -1,0 +1,7 @@
+add_library(Utilities src/InfosFromFilename.cc src/Header.cc)
+target_include_directories(Utilities PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/RawDataReader/interfaces/Utilities>)
+target_link_libraries(Utilities PRIVATE RawdataDecoder::RawdataDecoder)
+set_target_properties(Utilities PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/InfosFromFilename.h")
+add_library(Interfaces::Utilities ALIAS Utilities)
+install(TARGETS Utilities EXPORT UtilitiesTargets INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/interfaces/Utilities" PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/interfaces/Utilities")
+install(EXPORT UtilitiesTargets FILE UtilitiesTargets.cmake NAMESPACE Interfaces:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/RawdataDecoder")

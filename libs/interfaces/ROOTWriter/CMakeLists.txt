@@ -22,7 +22,7 @@ get_property(ROOT_CXX_STANDARD TARGET ROOT::Core PROPERTY INTERFACE_COMPILE_FEAT
 add_library(ROOTWriter src/ROOTWriter.cc)
 target_include_directories(ROOTWriter PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/ROOTWriter>)
 set_target_properties(ROOTWriter PROPERTIES PUBLIC_HEADER "include/ROOTWriter.h")
-target_link_libraries(ROOTWriter PUBLIC RawdataDecoder::RawdataDecoder ROOT::Core ROOT::Tree)
+target_link_libraries(ROOTWriter PUBLIC RawdataDecoder::RawdataDecoder ROOT::Core ROOT::Tree Interfaces::Utilities)
 target_compile_features(ROOTWriter PUBLIC ${ROOT_CXX_STANDARD})
 install(TARGETS ROOTWriter EXPORT ROOTWriterTargets INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/interfaces/ROOTWriter" PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/interfaces/ROOTWriter")
 install(EXPORT ROOTWriterTargets FILE ROOTWriterTargets.cmake NAMESPACE RawdataDecoder:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/RawdataDecoder")

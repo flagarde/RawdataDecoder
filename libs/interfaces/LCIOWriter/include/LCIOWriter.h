@@ -23,23 +23,23 @@ public:
 
   void setFilename(const std::string&);
 
-  void start(const VersionInfos& ver) final;
-  void processDIF(const Data&);
-  void processFrame(const Data&, const std::uint32_t& frameIndex);
-  void processPadInFrame(const Data&, const std::uint32_t& frameIndex, const std::uint32_t& channelIndex);
-  void end();
+  void         start(const VersionInfos& ver) final;
+  virtual void processHeader(const Buffer&) final;
+  void         processDIF(const Data&);
+  void         processChip(const Data&, const std::uint32_t& frameIndex);
+  void         processCell(const Data&, const std::uint32_t& frameIndex, const std::uint32_t& channelIndex);
+  void         end();
 
   virtual void startEvent();
   virtual void endEvent();
-  virtual void startDIF();
-  virtual void endDIF();
-  virtual void startFrame();
-  virtual void endFrame();
-  virtual void startPad();
-  virtual void endPad();
+  virtual void startLayer();
+  virtual void endLayer();
+  virtual void startChip();
+  virtual void endChip();
+  virtual void startCell();
+  virtual void endCell();
 
 private:
-  std::uint32_t                      myEventNumber{0};
   std::unique_ptr<IO::LCWriter>      m_LCWriter{nullptr};
   std::unique_ptr<IMPL::LCEventImpl> m_LCEvent{nullptr};
   IMPL::LCCollectionVec*             m_CollectionVec{nullptr};

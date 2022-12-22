@@ -1,10 +1,19 @@
 #pragma once
 
 #include "Buffer.h"
+#include "Exception.h"
 #include "Formatters.h"
+#include "fmt/format.h"
 
 #include <array>
 #include <iostream>
+
+enum class DetectorID
+{
+  Unkown = -1,
+  ECAL   = 0,
+  HCAL   = 1
+};
 
 class Time
 {
@@ -59,9 +68,7 @@ public:
   Time getTime(const std::size_t& column, const std::size_t& channel) { return m_times[column][channel]; }
 
   static constexpr std::size_t getNumberChannels() { return m_numberChannel; }
-
 private:
-  bool                                             m_IsECAL{false};
   std::uint16_t                                    m_chipID{0};
   std::vector<std::uint16_t>                       m_BCIDs;
   std::vector<std::array<Charge, m_numberChannel>> m_charges;
@@ -73,38 +80,37 @@ class Data
 public:
   Data(const Buffer& buffer) : m_Buffer(buffer)
   {
-    if(m_Buffer.size() >= 42 && m_Buffer[m_Buffer.size() - 42] == 0xf0 && m_Buffer[m_Buffer.size() - 41] == 0x01 && m_Buffer[m_Buffer.size() - 8] == 0xf0 && m_Buffer[m_Buffer.size() - 7] == 0x02) m_isECAL = true;
-    else
-      m_isECAL = false;
-    m_Layer     = buffer[buffer.size() - 1];
-    m_triggerid = m_isECAL ? m_Buffer[m_Buffer.size() - 43] * 0x100 + m_Buffer[m_Buffer.size() - 44] : (m_Buffer[8] & 0xff) * 256 + (m_Buffer[9] & 0xff);
-    m_cycleID   = ((m_Buffer[4] & 0xff) * 256 + (m_Buffer[5] & 0xff)) * 0x10000 + ((m_Buffer[6] & 0xff) * 256 + (m_Buffer[7] & 0xff));
+    m_Layer = buffer[buffer.size() - 1];
+    if(m_Buffer.size() == 14 || m_Buffer.size() == 16) m_isEmpty = true;
+    if(!empty())
+    {
+      if(m_Buffer.size() >= 42 && m_Buffer[m_Buffer.size() - 42] == 0xf0 && m_Buffer[m_Buffer.size() - 41] == 0x01 && m_Buffer[m_Buffer.size() - 8] == 0xf0 && m_Buffer[m_Buffer.size() - 7] == 0x02) m_detectoID = DetectorID::ECAL;
+      else
+        m_detectoID = DetectorID::HCAL;
 
-    if(m_Buffer.size() == 14 || m_Buffer.size() == 12) m_Data = m_Buffer;
-    else if(m_isECAL)
-      m_Data = Buffer(&m_Buffer[m_begin_chip_data_ECAL], m_Buffer.size() - m_begin_chip_data_ECAL - m_end_chip_data_ECAL);
-    else
-      m_Data = Buffer(&m_Buffer[m_begin_chip_data], m_Buffer.size() - m_end_chip_data - m_begin_chip_data);
+      m_triggerid = m_detectoID == DetectorID::ECAL ? m_Buffer[m_Buffer.size() - 43] * 0x100 + m_Buffer[m_Buffer.size() - 44] : (m_Buffer[8] & 0xff) * 256 + (m_Buffer[9] & 0xff);
 
-    createChips();
+      m_cycleID = ((m_Buffer[4] & 0xff) * 256 + (m_Buffer[5] & 0xff)) * 0x10000 + ((m_Buffer[6] & 0xff) * 256 + (m_Buffer[7] & 0xff));
+
+      if(m_detectoID == DetectorID::ECAL) m_Data = Buffer(&m_Buffer[m_begin_chip_data_ECAL], m_Buffer.size() - m_begin_chip_data_ECAL - m_end_chip_data_ECAL);
+      else if(m_detectoID == DetectorID::HCAL)
+        m_Data = Buffer(&m_Buffer[m_begin_chip_data], m_Buffer.size() - m_end_chip_data - m_begin_chip_data);
+      else
+        throw;
+
+      createChips();
+    }
   }
   std::uint32_t getCycleID() const { return m_cycleID; }
-  std::uint16_t getDetectorID() const { return m_detectorID; }
   std::uint32_t getTriggerID() const { return m_triggerid; }
   std::uint16_t getLayer() const { return m_Layer; }
-  bool          empty() const
-  {
-    if(m_Buffer.size() == 14 || m_Buffer.size() == 12) return true;
-    if(m_isECAL) return (m_Buffer.size() - m_begin_chip_data_ECAL - m_end_chip_data_ECAL + 2 == 0);
-    else
-      return (m_Buffer.size() - m_begin_chip_data - m_end_chip_data == 0);
-  }
-  Chip getChip() const { return m_chip; }
+  bool          empty() const { return m_isEmpty; }
+  Chip          getChip() const { return m_chip; }
 
   std::size_t dataSize() const { return m_Data.size(); }
-  std::size_t getNumberOfFrames() const { return 1; }
   Buffer      getData() const { return m_Data; }
   Buffer      getBuffer() const { return m_Buffer; }
+  int         getDetectorID() const { return static_cast<int>(m_detectoID); }
 
 private:
   void createChips()
@@ -117,14 +123,14 @@ private:
     static std::size_t caret{0};
     for(std::size_t column = 0; column != nbrColumns; ++column)
     {
-      static std::array<Charge, Chip::m_numberChannel> charges;
+      std::array<Charge, Chip::m_numberChannel> charges;
       for(std::size_t charge = Chip::m_numberChannel - 1; charge != 0; --charge)
       {
         charges[charge] = m_Data[caret] * 0x100 + m_Data[caret + 1];
         caret += 2;
       }
       m_chip.addCharges(charges);
-      static std::array<Time, Chip::m_numberChannel> times;
+      std::array<Time, Chip::m_numberChannel> times;
       for(std::size_t time = Chip::m_numberChannel - 1; time != 0; --time)
       {
         times[time] = m_Data[caret] * 0x100 + m_Data[caret + 1];
@@ -140,16 +146,16 @@ private:
     //m_chips.push_back(chip);
     caret = 0;
   }
-  bool                               m_isECAL{false};
+  DetectorID                         m_detectoID{DetectorID::Unkown};
   const static constexpr std::size_t m_begin_chip_data{10};     /* header (4) + Cycle (4) + triggerID (2) */
   const static constexpr std::size_t m_begin_chip_data_ECAL{8}; /* header (4) + Cycle (4) */
   const static constexpr std::size_t m_end_chip_data{6};        /* layer(1) + 0xff (1) + trailer (4) */
   const static constexpr std::size_t m_end_chip_data_ECAL{44};  /* layer(1) + 0xff (1) + trailer (4) + 0x02 (1) + 0xf0 (1) + 2*16 (32) + 0x01 (1) + 0xf1 (1) + triggerID (2)*/
   std::uint16_t                      m_Layer{0};
   std::uint32_t                      m_cycleID{0};
-  std::uint16_t                      m_detectorID{0};
   std::uint32_t                      m_triggerid{0};
   Buffer                             m_Buffer;
   Buffer                             m_Data;
   Chip                               m_chip;
+  bool                               m_isEmpty{false};
 };

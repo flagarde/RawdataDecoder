@@ -5,11 +5,14 @@
 
 #include "Exception.h"
 #include "Formatters.h"
+#include "fmt/color.h"
 
 #include <cstring>
 #include <iostream>
 
-std::size_t RawdataReader::m_BufferSize = 0x100000;
+std::size_t RawdataReader::m_BufferSize = 0x500000;
+
+Buffer RawdataReader::getEventBuffer() { return m_buf; }
 
 RawdataReader::RawdataReader(const char* fileName) : InterfaceReader("RawdataReader", "1.0.0")
 {
@@ -59,27 +62,18 @@ bool RawdataReader::nextEvent()
 {
   try
   {
-    return !m_FileStream.eof();
+    m_buf.clear();
+    do {
+      bit8_t bits;
+      m_FileStream.read(reinterpret_cast<char*>(&bits), sizeof(bit8_t));
+      m_buf.push_back(bits);
+    } while(m_buf.size() < 4 || m_buf[m_buf.size() - 4] != 0xfe || m_buf[m_buf.size() - 3] != 0xdd || m_buf[m_buf.size() - 2] != 0xfe || m_buf[m_buf.size() - 1] != 0xdd);
+    addToEventNumber(1);
+    m_ActualSize += m_buf.size();
+    return true;
   }
   catch(const std::ios_base::failure& e)
   {
-    return false;
-  }
-}
-
-bool RawdataReader::isSameEvent()
-{
-  //Trigger ID is a kind of event number but it not at the same place in ECAL and HCAL so let's to the job here
-  if(m_buf.size() >= 42 && m_buf[m_buf.size() - 42] == 0xf0 && m_buf[m_buf.size() - 41] == 0x01 && m_buf[m_buf.size() - 8] == 0xf0 && m_buf[m_buf.size() - 7] == 0x02) m_IsECAL = true;
-
-  std::int32_t        trigger_ID          = m_IsECAL ? m_buf[m_buf.size() - 43] * 0x100 + m_buf[m_buf.size() - 44] : m_buf[8] * 0x100 + m_buf[9];
-  static std::int32_t previous_trigger_ID = trigger_ID;
-
-  if(previous_trigger_ID == trigger_ID) return true;
-  else
-  {
-    m_EventNumber++;
-    previous_trigger_ID = trigger_ID;
     return false;
   }
 }
@@ -88,53 +82,47 @@ bool RawdataReader::nextDIFbuffer()
 {
   try
   {
-    bool   b_begin = 0;
-    bool   b_end   = 0;
-    bit8_t buffer  = 0;
-    while(!b_begin && m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char)))
+    static std::size_t pos{0};
+    std::size_t        position{0};
+    std::size_t        size{0};
+    for(std::size_t i = pos; i != m_buf.size() - 4; ++i)
     {
-      m_buf.push_back(buffer);
-      if(m_buf.size() > 4) m_buf.erase(m_buf.begin(), m_buf.begin() + m_buf.size() - 4);
-      if(m_buf[0] == 0xfa && m_buf[1] == 0x5a && m_buf[2] == 0xfa && m_buf[3] == 0x5a && m_buf.size() == 4) b_begin = 1;
-    }
-    while(!b_end && m_FileStream.read((char*)(&buffer), 1))
-    {
-      m_buf.push_back(buffer);
-      int int_tmp = m_buf.size();
-      if(int_tmp >= 4 && m_buf[int_tmp - 2] == 0xfe && m_buf[int_tmp - 1] == 0xee && m_buf[int_tmp - 4] == 0xfe && m_buf[int_tmp - 3] == 0xee) b_end = 1;
-    }
-    m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
-
-    m_buf.push_back(buffer);
-    bit8_t toto = buffer;
-    m_FileStream.read(reinterpret_cast<char*>(&buffer), sizeof(char));
-    m_buf.push_back(buffer);
-
-    if(toto != 0xff)
-    {
-      //m_buf.clear();
-      throw Exception(fmt::format("bad 0xff, received {} \n This is the buffer : {}", to_hex(toto), to_hex(buffer), to_hex(m_buf)));
+      if(m_buf[i] == 0xfa && m_buf[i + 1] == 0x5a && m_buf[i + 2] == 0xfa && m_buf[i + 3] == 0x5a) position = i;
+      if(m_buf[i] == 0xfe && m_buf[i + 1] == 0xee && m_buf[i + 2] == 0xfe && m_buf[i + 3] == 0xee)
+      {
+        size = i + 4;
+        if(m_buf[i + 4] != 0xff)
+        {
+          log()->error("Layer ID is not of the form 0xff**, I got {} \n Skipping it !!!", m_buf[i + 4]);
+          continue;
+        }
+        else
+        {
+          ++pos;
+          ++pos;
+          m_DIFbuffer = Buffer(&m_buf[position], size - position + 2);
+          break;
+        }
+      }
+      ++pos;
     }
 
-    return isSameEvent();
+    if(pos == m_buf.size() - 4)
+    {
+      pos = 0;
+      return false;
+    }
+    else
+      return true;
   }
   catch(const std::ios_base::failure& e)
   {
     log()->error("Caught an ios_base::failure in openFile : {}", e.what());
     return false;
   }
-  catch(const Exception& ex)
-  {
-    static int howmany{1};
-    log()->error("Found error : {}\n Skipping ! \n It happened {} times", ex.what(), howmany);
-    m_buf.clear();
-    howmany++;
-    // skip this chips and maybe the next one as the 0xfa 0x5a have already been eaten :(
-    return true;
-  }
 }
 
-Buffer RawdataReader::getBuffer() { return m_buf; }
+Buffer RawdataReader::getBuffer() { return m_DIFbuffer; }
 
 void RawdataReader::setFileSize(const std::size_t& size) { m_FileSize = size; }
 

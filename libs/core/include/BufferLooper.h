@@ -26,32 +26,33 @@ template<typename SOURCE, typename DESTINATION> void diff(SOURCE& m_Source, DEST
   Data data(m_Source.getBuffer());
 
   if(data.empty()) return;
-  /******************/
-  /*** START DIF ***/
+
+  //std::cout<<to_hex(data.getBuffer())<<std::endl;
+
+  // DIF
   m_Source.startDIF();
   m_Destination.startDIF();
-
-  /******************/
+  //
   m_Destination.processDIF(data);
 
   for(std::size_t column = 0; column != data.getChip().getNumberColumns(); ++column)
   {
     //
-    m_Source.startFrame();
-    m_Destination.startFrame();
+    m_Source.startChip();
+    m_Destination.startChip();
     //
-    m_Destination.processFrame(data, 0);
+    m_Destination.processChip(data, 0);
     for(std::size_t j = 0; j != data.getChip().getNumberChannels(); ++j)
     {
-      m_Source.startPad();
-      m_Destination.startPad();
-      m_Destination.processPadInFrame(data, column, j);
-      m_Source.endPad();
-      m_Destination.endPad();
+      m_Source.startCell();
+      m_Destination.startCell();
+      m_Destination.processCell(data, column, j);
+      m_Source.endCell();
+      m_Destination.endCell();
     }
     //
-    m_Source.endFrame();
-    m_Destination.endFrame();
+    m_Source.endChip();
+    m_Destination.endChip();
     //
   }
   //
@@ -63,7 +64,7 @@ template<typename SOURCE, typename DESTINATION> void diff(SOURCE& m_Source, DEST
 template<typename SOURCE, typename DESTINATION> class BufferLooper
 {
 public:
-  BufferLooper(SOURCE& source, DESTINATION& dest, bool debug = false) : m_Source(source), m_Destination(dest), m_Debug(debug)
+  BufferLooper(SOURCE& source, DESTINATION& dest) : m_Source(source), m_Destination(dest)
   {
     m_Logger = spdlog::create<spdlog::sinks::null_sink_mt>("streamout");
     if(!spdlog::get("streamout")) { spdlog::register_logger(m_Logger); }
@@ -80,7 +81,7 @@ public:
     m_Destination.setLogger(m_Logger);
   }
 
-  void loop(const std::uint32_t& m_NbrEventsToProcess = 0)
+  void loop(const std::uint32_t& m_NbrEventsToProcess = std::numeric_limits<std::uint32_t>::max())
   {
     // clang-format off
     fmt::print(fg(fmt::color::medium_orchid) | fmt::emphasis::bold,
@@ -126,32 +127,81 @@ fmt::format(fg(fmt::color::red) | fmt::emphasis::bold, "v{}", rawdatadecoder_ver
     timer.start();
     m_Source.start(version);
     m_Destination.start(version);
-    while(m_Source.nextEvent() && m_NbrEventsToProcess >= m_NbrEvents)
+    while(m_Source.nextEvent() && m_NbrEventsToProcess >= m_processedEvents)
     {
+      Timer timerEvent;
+      timerEvent.start();
+      Buffer buffer = m_Source.getEventBuffer();
+      if(m_NbrEventsToProcess == std::numeric_limits<std::uint32_t>::max()) m_Logger->info("Event {} size {:04.2f}kb ({:3.2f}%)", m_Source.getEventNumber(), (buffer.size() * sizeof(bit8_t)) * 1.0 / 1024, m_Source.relativePosition() * 100);
+      else
+        m_Logger->info("Event {} size {:04.2f}kb ({:3.2f}%)", m_Source.getEventNumber(), (buffer.size() * sizeof(bit8_t)) * 1.0 / 1024, m_processedEvents * 100.0 / m_NbrEventsToProcess);
       m_Destination.setEventNumber(m_Source.getEventNumber());
-      /*******************/
-      /*** START EVENT ***/
+      // Start event
       m_Source.startEvent();
       m_Destination.startEvent();
-      /*******************/
 
-      m_Logger->warn("===*** Event {} ***===", m_Destination.getEventNumber());
+      m_Destination.processHeader(buffer);
 
-      //Special case if we are in a new event the buffer has already been read
-      if(m_Source.getBuffer().size() != 0) { diff(m_Source, m_Destination); }
-      //std::cout<<"First Event "<<m_NbrEvents<<" "<<to_hex(a.getBuffer()[0])<<std::endl;
-      while(m_Source.nextDIFbuffer()) { diff(m_Source, m_Destination); }  // end of DIF while loop
-      m_NbrEvents++;
-      /*****************/
-      /*** END EVENT ***/
-      m_Source.endEvent();
-      m_Destination.endEvent();
-      /*****************/
+      bool eventEmpty{true};
+      while(m_Source.nextDIFbuffer())
+      {
+        m_Destination.processDIF(m_Source.getBuffer());
+        Data data(m_Source.getBuffer());
+        if(data.empty())
+        {
+          log()->warn("Layer {} empty", data.getLayer());
+          continue;
+        }
+        eventEmpty = false;
+        // DIF
+        m_Source.startDIF();
+        m_Destination.startDIF();
+        //
+
+        //fmt::print("{} : number colum {} toto {}\n",data.dataSize(), data.dataSize()%73 , (data.dataSize()%73)*73+(data.dataSize()%73));
+        for(std::size_t column = 0; column != data.getChip().getNumberColumns(); ++column)
+        {
+          //
+          m_Source.startChip();
+          m_Destination.startChip();
+          //
+          m_Destination.processChip(data, 0);
+          for(std::size_t j = 0; j != data.getChip().getNumberChannels(); ++j)
+          {
+            m_Source.startCell();
+            m_Destination.startCell();
+            m_Destination.processCell(data, column, j);
+            m_Source.endCell();
+            m_Destination.endCell();
+          }
+          //
+          m_Source.endChip();
+          m_Destination.endChip();
+          //
+        }
+        //
+        m_Source.endDIF();
+        m_Destination.endDIF();
+      }
+      ++m_processedEvents;
+      if(eventEmpty == false)
+      {
+        m_Destination.processTrailer(buffer);
+        m_Source.endEvent();
+        m_Destination.endEvent();
+      }
+      else
+      {
+        log()->warn(fmt::format(fmt::fg(fmt::color::red), "Empty event !"));
+        continue;
+      }
+      timerEvent.stop();
+      m_Logger->info("{0:─^{2}} processed in {1}us", "", timerEvent.getElapsedTime(), fmt::format("Event {}", m_Source.getEventNumber()).size());
     }  // end of event while loop
     m_Destination.end();
     m_Source.end();
     timer.stop();
-    fmt::print(fg(fmt::color::green) | fmt::emphasis::bold, "=== elapsed time {}ms ({}ms/event) ===\n", timer.getElapsedTime() / 1000, timer.getElapsedTime() / (1000 * m_NbrEvents));
+    fmt::print(fg(fmt::color::green) | fmt::emphasis::bold, "=== elapsed time {}ms ({}ms/event) ===\n", timer.getElapsedTime() / 1000, timer.getElapsedTime() / (1000 * m_processedEvents));
   }
   std::shared_ptr<spdlog::logger> log() { return m_Logger; }
 
@@ -160,6 +210,5 @@ private:
   std::vector<spdlog::sink_ptr>   m_Sinks;
   SOURCE&                         m_Source{nullptr};
   DESTINATION&                    m_Destination{nullptr};
-  bool                            m_Debug{false};
-  std::uint32_t                   m_NbrEvents{1};
+  std::uint32_t                   m_processedEvents{1};
 };
