@@ -56,8 +56,8 @@ void ROOTWriter::start(const VersionInfos& ver)
   m_Tree->Branch("BCIDs", &m_bcid);
   m_Tree->Branch("hitTags", &m_hitTag);
   m_Tree->Branch("gainTags", &m_gainTag);
-  m_Tree->Branch("charges", &m_charge);
-  m_Tree->Branch("times", &m_time);
+  m_Tree->Branch("HG_Charge", &m_charge);
+  m_Tree->Branch("LG_Charge", &m_time);
 }
 
 void ROOTWriter::end()
