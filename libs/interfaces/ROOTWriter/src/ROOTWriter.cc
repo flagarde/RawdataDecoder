@@ -58,6 +58,11 @@ void ROOTWriter::start(const VersionInfos& ver)
   m_Tree->Branch("gainTags", &m_gainTag);
   m_Tree->Branch("HG_Charge", &m_charge);
   m_Tree->Branch("LG_Charge", &m_time);
+
+  m_Tree->Branch("channel", &m_channel);
+  m_Tree->Branch("chip", &m_chip);
+  m_Tree->Branch("layer", &m_layer);
+  m_Tree->Branch("memory", &m_memory);
 }
 
 void ROOTWriter::end()
@@ -88,6 +93,10 @@ void ROOTWriter::processCell(const Data& d, const std::uint32_t& column, const s
   m_charge.push_back(d.getChip().getCharge(column, channelIndex).charge());
   m_bcid.push_back(d.getChip().getBCIDs(column));
   m_cellID.push_back(d.getLayer() * 1e5 + d.getChip().getID() * 1e4 + column * 1e2 + channelIndex);
+  m_channel.push_back(channelIndex);
+  m_chip.push_back(d.getChip().getID());
+  m_layer.push_back(d.getLayer());
+  m_memory.push_back(column);
 }
 
 void ROOTWriter::startEvent() {}
@@ -101,6 +110,10 @@ void ROOTWriter::endEvent()
   m_charge.clear();
   m_bcid.clear();
   m_cellID.clear();
+  m_channel.clear();
+  m_chip.clear();
+  m_layer.clear();
+  m_memory.clear();
 }
 
 void ROOTWriter::startDIF() {}

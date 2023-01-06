@@ -53,4 +53,8 @@ private:
   std::vector<int>   m_gainTag;
   std::vector<float> m_charge;
   std::vector<float> m_time;
+  std::vector<int>   m_channel;
+  std::vector<int>   m_chip;
+  std::vector<int>   m_layer;
+  std::vector<int>   m_memory;
 };
