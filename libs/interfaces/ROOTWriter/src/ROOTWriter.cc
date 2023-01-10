@@ -44,7 +44,7 @@ void ROOTWriter::start(const VersionInfos& ver)
   delete infos;
   //
 
-  m_Tree = new TTree("RawData", "Rawdata");
+  m_Tree = new TTree("Raw_Hit", "Rawdata");
   m_Tree->Branch("runNumber", &m_runNumber);
   m_Tree->Branch("eventTime", &m_eventTime);
   m_Tree->Branch("eventNumber", &m_eventNumber);
@@ -52,9 +52,9 @@ void ROOTWriter::start(const VersionInfos& ver)
   m_Tree->Branch("cherenkov", &m_cherenkov);
   m_Tree->Branch("cycleID", &m_cycleID);
   m_Tree->Branch("triggerID", &m_triggerID);
-  m_Tree->Branch("cellIDs", &m_cellID);
+  m_Tree->Branch("CellID", &m_cellID);
   m_Tree->Branch("BCIDs", &m_bcid);
-  m_Tree->Branch("hitTags", &m_hitTag);
+  m_Tree->Branch("HitTag", &m_hitTag);
   m_Tree->Branch("gainTags", &m_gainTag);
   m_Tree->Branch("HG_Charge", &m_charge);
   m_Tree->Branch("LG_Charge", &m_time);

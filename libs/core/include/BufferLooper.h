@@ -157,29 +157,31 @@ fmt::format(fg(fmt::color::red) | fmt::emphasis::bold, "v{}", rawdatadecoder_ver
         m_Source.startDIF();
         m_Destination.startDIF();
         //
-
-        //fmt::print("{} : number colum {} toto {}\n",data.dataSize(), data.dataSize()%73 , (data.dataSize()%73)*73+(data.dataSize()%73));
-        for(std::size_t column = 0; column != data.getChip().getNumberColumns(); ++column)
+        for(std::size_t chip = 0; chip != 1; ++chip)
         {
           //
           m_Source.startChip();
           m_Destination.startChip();
           //
-          m_Destination.processChip(data, 0);
-          for(std::size_t j = 0; j != data.getChip().getNumberChannels(); ++j)
+          m_Destination.processChip(data, chip);
+          //fmt::print("{} : number colum {} toto {}\n",data.dataSize(), data.dataSize()%73 , (data.dataSize()%73)*73+(data.dataSize()%73));
+          for(std::size_t column = 0; column != data.getChip().getNumberColumns(); ++column)
           {
-            m_Source.startCell();
-            m_Destination.startCell();
-            m_Destination.processCell(data, column, j);
-            m_Source.endCell();
-            m_Destination.endCell();
+            for(std::size_t j = 0; j != data.getChip().getNumberChannels(); ++j)
+            {
+              m_Source.startCell();
+              m_Destination.startCell();
+              m_Destination.processCell(data, column, j);
+              m_Source.endCell();
+              m_Destination.endCell();
+            }
           }
           //
           m_Source.endChip();
           m_Destination.endChip();
           //
+          //
         }
-        //
         m_Source.endDIF();
         m_Destination.endDIF();
       }
