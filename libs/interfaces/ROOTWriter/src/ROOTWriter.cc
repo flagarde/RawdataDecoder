@@ -45,24 +45,24 @@ void ROOTWriter::start(const VersionInfos& ver)
   //
 
   m_Tree = new TTree("Raw_Hit", "Rawdata");
-  m_Tree->Branch("runNumber", &m_runNumber);
-  m_Tree->Branch("eventTime", &m_eventTime);
-  m_Tree->Branch("eventNumber", &m_eventNumber);
-  m_Tree->Branch("detectorID", &m_detectorID);
-  m_Tree->Branch("cherenkov", &m_cherenkov);
-  m_Tree->Branch("cycleID", &m_cycleID);
-  m_Tree->Branch("triggerID", &m_triggerID);
+  m_Tree->Branch("Run_Num", &m_runNumber);
+  m_Tree->Branch("Event_Time", &m_eventTime);
+  m_Tree->Branch("Event_Number", &m_eventNumber);
+  m_Tree->Branch("DetectorID", &m_detectorID);
+  m_Tree->Branch("Cherenkov", &m_cherenkov);
+  m_Tree->Branch("CycleID", &m_cycleID);
+  m_Tree->Branch("TriggerID", &m_triggerID);
   m_Tree->Branch("CellID", &m_cellID);
-  m_Tree->Branch("BCIDs", &m_bcid);
+  m_Tree->Branch("BCID", &m_bcid);
   m_Tree->Branch("HitTag", &m_hitTag);
-  m_Tree->Branch("gainTags", &m_gainTag);
+  m_Tree->Branch("GainTag", &m_gainTag);
   m_Tree->Branch("HG_Charge", &m_charge);
   m_Tree->Branch("LG_Charge", &m_time);
 
-  m_Tree->Branch("channel", &m_channel);
-  m_Tree->Branch("chip", &m_chip);
-  m_Tree->Branch("layer", &m_layer);
-  m_Tree->Branch("memory", &m_memory);
+  m_Tree->Branch("Channel", &m_channel);
+  m_Tree->Branch("Chip", &m_chip);
+  m_Tree->Branch("Layer", &m_layer);
+  m_Tree->Branch("Memory", &m_memory);
 }
 
 void ROOTWriter::end()

@@ -3,6 +3,7 @@ include(CMakePackageConfigHelpers)
 
 add_subdirectory(core)
 add_subdirectory(interfaces)
+add_subdirectory(legacy)
 
 configure_package_config_file("${PROJECT_SOURCE_DIR}/cmake/RawdataDecoderConfig.cmake.in" "${CMAKE_CURRENT_BINARY_DIR}/RawdataDecoderConfig.cmake" INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/RawdataDecoder")
 write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/RawdataDecoderVersion.cmake" COMPATIBILITY SameMajorVersion)

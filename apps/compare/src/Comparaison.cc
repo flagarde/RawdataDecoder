@@ -28,5 +28,5 @@ int main(int argc, char** argv)
   SetCEPCCDRStyle();
   Comparator comparator(old, nouveau);
   comparator.Run();
-  comparator.SaveAs(output_path + "/" + output_file + ".pdf");
+  comparator.SaveAsPDF(output_path + "/" + output_file + ".pdf");
 }
