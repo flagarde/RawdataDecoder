@@ -28,3 +28,9 @@ How to run :
 1) export STREAMOUT_OUTPUT_PATH=`somepath`
 2) ./Comparaison --original **OriginalFile.root** --new **NewFile.root** --pdf_name **MyResult** (no .pdf)
 3) Enjoy
+
+### Other codes
+
+Origina Rawdata to ROOT file for HCAL
+
+1) ./LegacyRawdataToROOT -f **file.dat** -o **output.root**
