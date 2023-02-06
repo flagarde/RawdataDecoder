@@ -141,22 +141,22 @@ private:
     {
       Chip                                      mychip;
       std::array<Charge, Chip::m_numberChannel> charges;
-      for(std::size_t charge = Chip::m_numberChannel - 1; charge != 0; --charge)
+      for(std::size_t charge = Chip::m_numberChannel; charge != 0; --charge)
       {
-        charges[charge] = m_Data[caret] * 0x100 + m_Data[caret + 1];
+        charges[charge - 1] = m_Data[caret] * 0x100 + m_Data[caret + 1];
         caret += 2;
       }
       mychip.addCharges(charges);
       std::array<Time, Chip::m_numberChannel> times;
-      for(std::size_t time = Chip::m_numberChannel - 1; time != 0; --time)
+      for(std::size_t time = Chip::m_numberChannel; time != 0; --time)
       {
-        times[time] = m_Data[caret] * 0x100 + m_Data[caret + 1];
+        times[time - 1] = m_Data[caret] * 0x100 + m_Data[caret + 1];
         caret += 2;
       }
       mychip.addTimes(times);
       mychip.addBCID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
       caret += 2;
-      mychip.setID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
+      mychip.setID(m_Data[caret + 1]);
       m_chip.push_back(mychip);
       caret += 2;
     }
