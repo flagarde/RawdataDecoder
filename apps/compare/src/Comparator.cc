@@ -18,7 +18,7 @@ void Comparator::Run()
   chip();
   memory();
   channel();
-  cellID();
+  // cellID();
 }
 
 void Comparator::ADC_Low()
@@ -46,15 +46,15 @@ void Comparator::num_hits()
 
 void Comparator::layer()
 {
-  auto a = m_oldData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1]/1e5)").Histo1D({"Legacy", ";Layer Index;Count", 42, 0, 42}, "tmp");
-  auto b = m_newData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1]/1e5)").Histo1D({"New", ";Layer Index;Count", 42, 0, 42}, "tmp");
+  auto a = m_oldData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1]/1e7)").Histo1D({"Legacy", ";Layer Index;Count", 100, 0, 100}, "tmp");
+  auto b = m_newData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1]/1e7)").Histo1D({"New", ";Layer Index;Count", 100, 0, 100}, "tmp");
   generateCanvas(a, b, ";Layer Index; #Delta");
 }
 
 void Comparator::chip()
 {
-  auto a = m_oldData->Define("tmp", [](ROOT::RVecI& adc, ROOT::RVecI& hit_tag) { return (adc / 1e4) - (adc / 1e5) * 10; }, {"CellID", "HitTag"}).Histo1D({"Legacy", ";Chip Index;Count", 9, 1, 10}, "tmp");
-  auto b = m_newData->Define("tmp", [](ROOT::RVecI& adc, ROOT::RVecI& hit_tag) { return (adc / 1e4) - (adc / 1e5) * 10; }, {"CellID", "HitTag"}).Histo1D({"New", ";Chip Index;Count", 9, 1, 10}, "tmp");
+  auto a = m_oldData->Define("tmp", [](ROOT::RVecI& adc, ROOT::RVecI& hit_tag) { return (adc / 1e4) - (adc / 1e7) * 1000; }, {"CellID", "HitTag"}).Histo1D({"Legacy", ";Chip Index;Count", 256, 0, 256}, "tmp");
+  auto b = m_newData->Define("tmp", [](ROOT::RVecI& adc, ROOT::RVecI& hit_tag) { return (adc / 1e4) - (adc / 1e7) * 1000; }, {"CellID", "HitTag"}).Histo1D({"New", ";Chip Index;Count", 256, 0, 256}, "tmp");
   generateCanvas(a, b, ";Chip Index; #Delta");
 }
 
@@ -67,14 +67,14 @@ void Comparator::memory()
 
 void Comparator::channel()
 {
-  auto a = m_oldData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1]%100)").Histo1D({"Legacy", ";Layer Index;Count", 36, 0, 36}, "tmp");
-  auto b = m_newData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1]%100)").Histo1D({"New", ";Layer Index;Count", 36, 0, 36}, "tmp");
+  auto a = m_oldData->Define("tmp", [](ROOT::RVecI& adc, ROOT::RVecI& hit_tag) { return (adc % 100); }, {"CellID", "HitTag"}).Histo1D({"Legacy", ";Layer Index;Count", 50, 0, 50}, "tmp");
+  auto b = m_newData->Define("tmp", [](ROOT::RVecI& adc, ROOT::RVecI& hit_tag) { return (adc % 100); }, {"CellID", "HitTag"}).Histo1D({"New", ";Layer Index;Count", 50, 0, 50}, "tmp");
   generateCanvas(a, b, ";Channel Index; #Delta");
 }
 
-void Comparator::cellID()
+/*void Comparator::cellID()
 {
   auto a = m_oldData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1])").Histo1D({"Legacy", ";Layer Index;Count", 4300000, 0, 4300000}, "tmp");
   auto b = m_newData->Define("tmp", "ROOT::RVec<int>(CellID[HitTag == 1])").Histo1D({"New", ";Layer Index;Count", 4300000, 0, 4300000}, "tmp");
   generateCanvas(a, b, ";CellID; #Delta");
-}
+}*/

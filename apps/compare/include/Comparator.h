@@ -96,6 +96,6 @@ private:
   void   chip();
   void   memory();
   void   channel();
-  void   cellID();
+  //void   cellID();
   Ploter m_Ploter;
 };

@@ -45,7 +45,20 @@ class Chip
 {
 public:
   static constexpr std::size_t m_numberChannel{36};
-  Chip() {}
+  Chip()
+  {
+    clear();
+    m_BCIDs.reserve(16);
+    m_charges.reserve(16);
+    m_times.reserve(16);
+  }
+  void clear()
+  {
+    m_chipID = -1;
+    m_BCIDs.clear();
+    m_charges.clear();
+    m_times.clear();
+  }
   void          setID(const std::uint8_t& id) { m_chipID = id; }
   std::uint16_t getID() { return m_chipID; }
   void          reserveColumns(const std::size_t& columns)
@@ -80,6 +93,7 @@ class Data
 public:
   Data(const Buffer& buffer) : m_Buffer(buffer)
   {
+    m_chip.reserve(10);
     m_Layer = buffer[buffer.size() - 1];
     if(m_Buffer.size() == 14 || m_Buffer.size() == 16) m_isEmpty = true;
     if(!empty())
@@ -105,7 +119,8 @@ public:
   std::uint32_t getTriggerID() const { return m_triggerid; }
   std::uint16_t getLayer() const { return m_Layer; }
   bool          empty() const { return m_isEmpty; }
-  Chip          getChip() const { return m_chip; }
+  std::size_t   getChipsNumber() const { return m_chip.size(); }
+  Chip          getChip(const int& i) const { return m_chip[i]; }
 
   std::size_t dataSize() const { return m_Data.size(); }
   Buffer      getData() const { return m_Data; }
@@ -115,35 +130,36 @@ public:
 private:
   void createChips()
   {
-    m_chip.setID(m_Data[m_Data.size() - 1]);
+    //m_chip.setID(m_Data[m_Data.size() - 1]);
     // Number of SCA columns = (size() - chipID(2)) % (( 36 charges + 36 times + BCID )*2)
-    std::size_t nbrColumns = (m_Data.size() - 2) % (73 * 2);
-    m_chip.reserveColumns(nbrColumns);
-
+    std::size_t        nbrChips = (m_Data.size() - 2) / (74 * 2);
+    //if(nbrChips > 9999999)  nbrChips=0;
+    //std::cout<<m_Data.size()<<" "<<(m_Data.size() - 2)<<" "<< nbrColumns<<"  "<<(m_Data.size() - 2) % (73 * 2)<<std::endl;
     static std::size_t caret{0};
-    for(std::size_t column = 0; column != nbrColumns; ++column)
+
+    for(std::size_t chip = 0; chip != nbrChips; ++chip)
     {
+      Chip                                      mychip;
       std::array<Charge, Chip::m_numberChannel> charges;
       for(std::size_t charge = Chip::m_numberChannel - 1; charge != 0; --charge)
       {
         charges[charge] = m_Data[caret] * 0x100 + m_Data[caret + 1];
         caret += 2;
       }
-      m_chip.addCharges(charges);
+      mychip.addCharges(charges);
       std::array<Time, Chip::m_numberChannel> times;
       for(std::size_t time = Chip::m_numberChannel - 1; time != 0; --time)
       {
         times[time] = m_Data[caret] * 0x100 + m_Data[caret + 1];
         caret += 2;
       }
-      m_chip.addTimes(times);
-    }
-    for(std::size_t column = 0; column != nbrColumns; ++column)
-    {
-      m_chip.addBCID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
+      mychip.addTimes(times);
+      mychip.addBCID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
+      caret += 2;
+      mychip.setID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
+      m_chip.push_back(mychip);
       caret += 2;
     }
-    //m_chips.push_back(chip);
     caret = 0;
   }
   DetectorID                         m_detectoID{DetectorID::Unkown};
@@ -156,6 +172,6 @@ private:
   std::uint32_t                      m_triggerid{0};
   Buffer                             m_Buffer;
   Buffer                             m_Data;
-  Chip                               m_chip;
+  std::vector<Chip>                  m_chip;
   bool                               m_isEmpty{false};
 };

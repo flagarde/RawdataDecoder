@@ -50,21 +50,25 @@ void LCIOWriter::processDIF(const Data& d) {}
 
 void LCIOWriter::processChip(const Data& d, const std::uint32_t& frameIndex) {}
 
-void LCIOWriter::processCell(const Data& d, const std::uint32_t& column, const std::uint32_t& channelIndex)
+void LCIOWriter::processCell(const Data& d, const std::uint32_t& chip, const std::uint32_t& channel)
 {
   UTIL::CellIDEncoder<IMPL::RawCalorimeterHitImpl> cd("BCID:16,gain:1,hit:1,layer:8,chip:8,channel:8", m_CollectionVec);
   m_LCEvent->setTimeStamp(m_LCEvent->getTimeStamp() + d.getTriggerID());
 
   IMPL::RawCalorimeterHitImpl* hit = new IMPL::RawCalorimeterHitImpl;
-  cd["BCID"]                       = d.getChip().getBCIDs(column);
-  cd["gain"]                       = d.getChip().getCharge(column, channelIndex).gain();
-  cd["hit"]                        = d.getChip().getCharge(column, channelIndex).hit();
-  cd["layer"]                      = d.getLayer();
-  cd["chip"]                       = d.getChip().getID();
-  cd["channel"]                    = channelIndex;
-  cd.setCellID(hit);
-  hit->setAmplitude(d.getChip().getCharge(column, channelIndex).charge());
-  hit->setTimeStamp(d.getChip().getTime(column, channelIndex).timestamp());
+  for(std::size_t memory = 0; memory != d.getChip(chip).getNumberColumns(); ++memory)
+  {
+    cd["BCID"]    = d.getChip(chip).getBCIDs(memory);
+    cd["gain"]    = d.getChip(chip).getCharge(memory, channel).gain();
+    cd["hit"]     = d.getChip(chip).getCharge(memory, channel).hit();
+    cd["layer"]   = d.getLayer();
+    cd["chip"]    = d.getChip(chip).getID();
+    cd["channel"] = channel;
+    cd.setCellID(hit);
+    hit->setAmplitude(d.getChip(chip).getCharge(memory, channel).charge());
+    hit->setTimeStamp(d.getChip(chip).getTime(memory, channel).timestamp());
+    if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_LCEvent->parameters().setValue("Cherenkov", -1);
+  }
   m_CollectionVec->addElement(hit);
 }
 

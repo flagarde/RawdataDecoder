@@ -10,7 +10,7 @@
 #include <cstring>
 #include <iostream>
 
-std::size_t RawdataReader::m_BufferSize = 0x500000;
+std::size_t RawdataReader::m_BufferSize = 20000000;
 
 Buffer RawdataReader::getEventBuffer() { return m_buf; }
 
@@ -41,10 +41,10 @@ void RawdataReader::openFile(const std::string& fileName)
 {
   try
   {
-    m_FileStream.rdbuf()->pubsetbuf(0, 0);
+    //m_FileStream.rdbuf()->pubsetbuf(0, 0);
     m_FileStream.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     m_FileStream.open(fileName.c_str(), std::ios::in | std::ios::binary | std::ios::ate);  // Start at the end to directly calculate the size of the file then come back to beginning
-    m_FileStream.rdbuf()->pubsetbuf(0, 0);
+    //m_FileStream.rdbuf()->pubsetbuf(0, 0);
     if(m_FileStream.is_open())
     {
       setFileSize(m_FileStream.tellg());
@@ -63,8 +63,8 @@ bool RawdataReader::nextEvent()
   try
   {
     m_buf.clear();
+    bit8_t bits;
     do {
-      bit8_t bits;
       m_FileStream.read(reinterpret_cast<char*>(&bits), sizeof(bit8_t));
       m_buf.push_back(bits);
     } while(m_buf.size() < 4 || m_buf[m_buf.size() - 4] != 0xfe || m_buf[m_buf.size() - 3] != 0xdd || m_buf[m_buf.size() - 2] != 0xfe || m_buf[m_buf.size() - 1] != 0xdd);

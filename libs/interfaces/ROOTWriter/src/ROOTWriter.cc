@@ -10,7 +10,20 @@
 
 void ROOTWriter::setFilename(const std::string& filename) { m_Filename = filename; }
 
-ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "1.0.0") { addCompatibility("RawdataReader", ">=1.0.0"); }
+ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "1.0.0")
+{
+  addCompatibility("RawdataReader", ">=1.0.0");
+  m_cellID.reserve(10000);
+  m_bcid.reserve(10000);
+  m_hitTag.reserve(10000);
+  m_gainTag.reserve(10000);
+  m_charge.reserve(10000);
+  m_time.reserve(10000);
+  m_channel.reserve(10000);
+  m_chip.reserve(10000);
+  m_layer.reserve(10000);
+  m_memory.reserve(10000);
+}
 
 void ROOTWriter::processHeader(const Buffer& d)
 {
@@ -24,7 +37,7 @@ void ROOTWriter::start(const VersionInfos& ver)
   setTime(extractTimestamp(m_Filename));
   setRunNumber(extractRunNumber(m_Filename));
 
-  m_File = TFile::Open(m_Filename.c_str(), "RECREATE", m_Filename.c_str(), ROOT::CompressionSettings(ROOT::kZLIB, 5));
+  m_File = TFile::Open(m_Filename.c_str(), "RECREATE", m_Filename.c_str() /*, ROOT::CompressionSettings(ROOT::kZLIB, 5)*/);
 
   // Informations from streamout
   TTree*      infos           = new TTree("Infos", "Library and interfaces informations");
@@ -45,24 +58,24 @@ void ROOTWriter::start(const VersionInfos& ver)
   //
 
   m_Tree = new TTree("Raw_Hit", "Rawdata");
-  m_Tree->Branch("Run_Num", &m_runNumber);
-  m_Tree->Branch("Event_Time", &m_eventTime);
-  m_Tree->Branch("Event_Number", &m_eventNumber);
-  m_Tree->Branch("DetectorID", &m_detectorID);
-  m_Tree->Branch("Cherenkov", &m_cherenkov);
-  m_Tree->Branch("CycleID", &m_cycleID);
-  m_Tree->Branch("TriggerID", &m_triggerID);
-  m_Tree->Branch("CellID", &m_cellID);
-  m_Tree->Branch("BCID", &m_bcid);
-  m_Tree->Branch("HitTag", &m_hitTag);
-  m_Tree->Branch("GainTag", &m_gainTag);
-  m_Tree->Branch("HG_Charge", &m_charge);
-  m_Tree->Branch("LG_Charge", &m_time);
+  m_Tree->Branch("Run_Num", &m_runNumber, 320000);
+  m_Tree->Branch("Event_Time", &m_eventTime, 320000);
+  m_Tree->Branch("Event_Number", &m_eventNumber, 320000);
+  m_Tree->Branch("DetectorID", &m_detectorID, 320000);
+  m_Tree->Branch("Cherenkov", &m_cherenkov, 320000);
+  m_Tree->Branch("CycleID", &m_cycleID, 320000);
+  m_Tree->Branch("TriggerID", &m_triggerID, 320000);
+  m_Tree->Branch("CellID", &m_cellID, 320000);
+  m_Tree->Branch("BCID", &m_bcid, 320000);
+  m_Tree->Branch("HitTag", &m_hitTag, 320000);
+  m_Tree->Branch("GainTag", &m_gainTag, 320000);
+  m_Tree->Branch("HG_Charge", &m_charge, 320000);
+  m_Tree->Branch("LG_Charge", &m_time, 320000);
 
-  m_Tree->Branch("Channel", &m_channel);
-  m_Tree->Branch("Chip", &m_chip);
-  m_Tree->Branch("Layer", &m_layer);
-  m_Tree->Branch("Memory", &m_memory);
+  m_Tree->Branch("Channel", &m_channel, 320000);
+  m_Tree->Branch("Chip", &m_chip, 320000);
+  m_Tree->Branch("Layer", &m_layer, 320000);
+  m_Tree->Branch("Memory", &m_memory, 320000);
 }
 
 void ROOTWriter::end()
@@ -80,23 +93,28 @@ void ROOTWriter::processDIF(const Data& d) {}
 
 void ROOTWriter::processChip(const Data& d, const std::uint32_t& frameIndex) {}
 
-void ROOTWriter::processCell(const Data& d, const std::uint32_t& column, const std::uint32_t& channelIndex)
+void ROOTWriter::processCell(const Data& d, const std::uint32_t& chip, const std::uint32_t& channel)
 {
   m_runNumber   = getRunNumber();
   m_eventNumber = getEventNumber();
   m_detectorID  = d.getDetectorID();
   m_cycleID     = d.getCycleID();
   m_triggerID   = d.getTriggerID();
-  m_hitTag.push_back(d.getChip().getCharge(column, channelIndex).hit());
-  m_gainTag.push_back(d.getChip().getCharge(column, channelIndex).gain());
-  m_time.push_back(d.getChip().getTime(column, channelIndex).timestamp());
-  m_charge.push_back(d.getChip().getCharge(column, channelIndex).charge());
-  m_bcid.push_back(d.getChip().getBCIDs(column));
-  m_cellID.push_back(d.getLayer() * 1e5 + d.getChip().getID() * 1e4 + column * 1e2 + channelIndex);
-  m_channel.push_back(channelIndex);
-  m_chip.push_back(d.getChip().getID());
-  m_layer.push_back(d.getLayer());
-  m_memory.push_back(column);
+  for(std::size_t i = 0; i != d.getChip(chip).getNumberColumns(); ++i)
+  {
+    m_hitTag.push_back(d.getChip(chip).getCharge(i, channel).hit());
+    m_gainTag.push_back(d.getChip(chip).getCharge(i, channel).gain());
+    m_time.push_back(d.getChip(chip).getTime(i, channel).timestamp());
+    m_charge.push_back(d.getChip(chip).getCharge(i, channel).charge());
+    m_bcid.push_back(d.getChip(chip).getBCIDs(i));
+    m_cellID.push_back(d.getLayer() * 1e7 + d.getChip(chip).getID() * 1e4 + i * 1e2 + channel);
+    m_channel.push_back(channel);
+    m_chip.push_back(d.getChip(chip).getID());
+    //std::cout<<d.getChip(chip).getID()<<std::endl;
+    m_layer.push_back(d.getLayer());
+    m_memory.push_back(i);
+    if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_cherenkov = -1;
+  }
 }
 
 void ROOTWriter::startEvent() {}
