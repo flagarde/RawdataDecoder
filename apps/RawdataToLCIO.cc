@@ -13,8 +13,9 @@ int main(int argc, char** argv)
 {
   CLI::App app{"Rawdata to LCIO writer"};
   app.set_version_flag("--version", rawdatadecoder_version.to_string());
-  std::string file{""};
-  app.add_option("-f,--filename", file, "Path of the file")->check(CLI::ExistingFile)->required();
+  app.set_config("--datafiles", "Files.toml", "Read an ini file", false);
+  std::vector<std::string> files;
+  app.add_option("-f,--filenames", files, "Path of the files")->required()->check(CLI::ExistingFile);
   std::uint32_t eventNbr{std::numeric_limits<std::uint32_t>::max()};
   app.add_option("-e,--events", eventNbr, "Event number to process")->expected(1)->check(CLI::PositiveNumber);
   spdlog::level::level_enum verbosity{spdlog::level::trace};
@@ -35,10 +36,13 @@ int main(int argc, char** argv)
   }
   spdlog::set_level(verbosity);
 
-  RawdataReader source(file.c_str());
-  LCIOWriter    destination;
-  destination.setFilename((output_path + "/" + filename(file) + ".slcio").c_str());
-  BufferLooper looper(source, destination);
-  looper.addSink(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-  looper.loop(eventNbr);
+  for(std::size_t file = 0; file != files.size(); ++file)
+  {
+    RawdataReader source(files[file].c_str());
+    LCIOWriter    destination;
+    destination.setFilename((output_path + "/" + filename(files[file]) + ".slcio").c_str());
+    BufferLooper looper(source, destination);
+    looper.addSink(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    looper.loop(eventNbr);
+  }
 }
