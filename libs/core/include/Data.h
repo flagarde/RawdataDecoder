@@ -18,7 +18,7 @@ enum class DetectorID
 class Time
 {
 public:
-  Time() {}
+  Time() = default;
   Time(const std::uint16_t& data) : m_Data(data) {}
   bool          hit() { return m_Data & 0x1000; }
   bool          gain() { return m_Data & 0x2000; }
@@ -31,7 +31,7 @@ private:
 class Charge
 {
 public:
-  Charge() {}
+  Charge() = default;
   Charge(const std::uint16_t& data) : m_Data(data) {}
   bool          hit() { return m_Data & 0x1000; }
   bool          gain() { return m_Data & 0x2000; }
@@ -48,9 +48,6 @@ public:
   Chip()
   {
     clear();
-    m_BCIDs.reserve(16);
-    m_charges.reserve(16);
-    m_times.reserve(16);
   }
   void clear()
   {
@@ -61,23 +58,12 @@ public:
   }
   void          setID(const std::uint8_t& id) { m_chipID = id; }
   std::uint16_t getID() { return m_chipID; }
-  void          reserveColumns(const std::size_t& columns)
-  {
-    m_BCIDs.reserve(columns);
-    m_charges.reserve(columns);
-    m_times.reserve(columns);
-  }
   void                                addCharges(const std::array<Charge, Chip::m_numberChannel>& charges) { m_charges.push_back(charges); }
   void                                addTimes(const std::array<Time, Chip::m_numberChannel>& times) { m_times.push_back(times); }
   void                                addBCID(const std::uint16_t& bcid) { m_BCIDs.push_back(bcid); }
   std::size_t                         getNumberColumns() { return m_BCIDs.size(); }
   std::uint16_t                       getBCIDs(const std::size_t& column) { return m_BCIDs[column]; }
-  std::array<Charge, m_numberChannel> getCharges(const std::size_t& column) { return m_charges[column]; }
-
   Charge getCharge(const std::size_t& column, const std::size_t& channel) { return m_charges[column][channel]; }
-
-  std::array<Time, m_numberChannel> getTimes(const std::size_t& column) { return m_times[column]; }
-
   Time getTime(const std::size_t& column, const std::size_t& channel) { return m_times[column][channel]; }
 
   static constexpr std::size_t getNumberChannels() { return m_numberChannel; }
@@ -91,10 +77,10 @@ private:
 class Data
 {
 public:
-  Data(const Buffer& buffer) : m_Buffer(buffer)
+  Data(const Buffer& buffer) : m_Buffer(buffer) {}
+  void parse()
   {
-    m_chip.reserve(10);
-    m_Layer = buffer[buffer.size() - 1];
+    m_Layer = m_Buffer[m_Buffer.size() - 1];
     if(m_Buffer.size() == 14 || m_Buffer.size() == 16) m_isEmpty = true;
     if(!empty())
     {
@@ -119,24 +105,28 @@ public:
   std::uint32_t getTriggerID() const { return m_triggerid; }
   std::uint16_t getLayer() const { return m_Layer; }
   bool          empty() const { return m_isEmpty; }
-  std::size_t   getChipsNumber() const { return m_chip.size(); }
-  Chip          getChip(const int& i) const { return m_chip[i]; }
+  int           getDetectorID() const { return static_cast<int>(m_detectoID); }
+
+  std::size_t getChipsNumber() const { return m_chip.size(); }
+  Chip        getChip(const int& i) const { return m_chip[i]; }
 
   std::size_t dataSize() const { return m_Data.size(); }
   Buffer      getData() const { return m_Data; }
   Buffer      getBuffer() const { return m_Buffer; }
-  int         getDetectorID() const { return static_cast<int>(m_detectoID); }
+  bool        isTemperatureInfos()
+  {
+    if(m_detectoID == DetectorID::ECAL && m_Layer == 39) return true;
+    else if(m_detectoID == DetectorID::ECAL && m_Layer == 47)
+      return true;
+    else
+      return false;
+  }
 
 private:
   void createChips()
   {
-    //m_chip.setID(m_Data[m_Data.size() - 1]);
-    // Number of SCA columns = (size() - chipID(2)) % (( 36 charges + 36 times + BCID )*2)
-    std::size_t        nbrChips = (m_Data.size() - 2) / (74 * 2);
-    //if(nbrChips > 9999999)  nbrChips=0;
-    //std::cout<<m_Data.size()<<" "<<(m_Data.size() - 2)<<" "<< nbrColumns<<"  "<<(m_Data.size() - 2) % (73 * 2)<<std::endl;
-    static std::size_t caret{0};
-
+    std::size_t nbrChips = (m_Data.size()) / (74 * 2);  //(size()) / (( 36 charges + 36 times + BCID(2bits) )*2)
+    std::size_t caret{0};
     for(std::size_t chip = 0; chip != nbrChips; ++chip)
     {
       Chip                                      mychip;
@@ -156,11 +146,10 @@ private:
       mychip.addTimes(times);
       mychip.addBCID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
       caret += 2;
-      mychip.setID(m_Data[caret + 1]);
+      mychip.setID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
       m_chip.push_back(mychip);
       caret += 2;
     }
-    caret = 0;
   }
   DetectorID                         m_detectoID{DetectorID::Unkown};
   const static constexpr std::size_t m_begin_chip_data{10};     /* header (4) + Cycle (4) + triggerID (2) */

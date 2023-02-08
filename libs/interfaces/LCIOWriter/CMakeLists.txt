@@ -1,6 +1,7 @@
 missive(WARN "Build with LCIO interface")
 
 set(LCIO_BUILD_LCIO_STANDARD_EXAMPLES TRUE)
+set(LCIO_VERSION "v02-04-03")
 include(Lcio)
 
 add_library(LCIOWriter src/LCIOWriter.cc)

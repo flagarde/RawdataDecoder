@@ -26,19 +26,31 @@ template<typename SOURCE, typename DESTINATION> class BufferLooper
 public:
   BufferLooper(SOURCE& source, DESTINATION& dest) : m_Source(source), m_Destination(dest)
   {
-    m_Logger = spdlog::create<spdlog::sinks::null_sink_mt>("streamout");
-    if(!spdlog::get("streamout")) { spdlog::register_logger(m_Logger); }
-    m_Source.setLogger(m_Logger);
-    m_Destination.setLogger(m_Logger);
+    try
+    {
+      m_Logger = spdlog::create<spdlog::sinks::null_sink_mt>("streamout");
+      if(!spdlog::get("streamout")) { spdlog::register_logger(m_Logger); }
+      m_Source.setLogger(m_Logger);
+      m_Destination.setLogger(m_Logger);
+    }
+    catch(const spdlog::spdlog_ex& c)
+    {
+    }
   }
 
   void addSink(const spdlog::sink_ptr& sink, const spdlog::level::level_enum& level = spdlog::get_level())
   {
-    sink->set_level(level);
-    m_Sinks.push_back(sink);
-    m_Logger = std::make_shared<spdlog::logger>("streamout", begin(m_Sinks), end(m_Sinks));
-    m_Source.setLogger(m_Logger);
-    m_Destination.setLogger(m_Logger);
+    try
+    {
+      sink->set_level(level);
+      m_Sinks.push_back(sink);
+      m_Logger = std::make_shared<spdlog::logger>("streamout", begin(m_Sinks), end(m_Sinks));
+      m_Source.setLogger(m_Logger);
+      m_Destination.setLogger(m_Logger);
+    }
+    catch(const spdlog::spdlog_ex& c)
+    {
+    }
   }
 
   void loop(const std::uint32_t& m_NbrEventsToProcess = std::numeric_limits<std::uint32_t>::max())
@@ -103,37 +115,40 @@ fmt::format(fg(fmt::color::red) | fmt::emphasis::bold, "v{}", rawdatadecoder_ver
       m_Destination.processHeader(buffer);
 
       bool eventEmpty{true};
-      while(m_Source.nextDIFbuffer())
+      while(m_Source.nextDIFbuffer())  // DIF == layer;
       {
-        m_Destination.processDIF(m_Source.getBuffer());
         Data data(m_Source.getBuffer());
+        data.parse();
         if(data.empty())
         {
           log()->warn("Layer {} empty", data.getLayer());
           continue;
         }
         eventEmpty = false;
+        if(data.isTemperatureInfos())
+        {
+          log()->error("Temperature info layer({})", data.getLayer());
+          continue;
+        }
+        m_Destination.processDIF(std::move(data));  // layer infos
+
         // DIF
         m_Source.startDIF();
         m_Destination.startDIF();
         //
-        for(std::size_t chip = 0; chip != 1; ++chip)
+        for(std::size_t chip = 0; chip != data.getChipsNumber(); ++chip)
         {
-          //
           m_Source.startChip();
           m_Destination.startChip();
           //
-          m_Destination.processChip(data, chip);
-          for(std::size_t chip = 0; chip != data.getChipsNumber(); ++chip)
+          m_Destination.processChip(std::move(data), chip);
+          for(std::size_t channel = 0; channel != data.getChip(chip).getNumberChannels(); ++channel)
           {
-            for(std::size_t channel = 0; channel != data.getChip(chip).getNumberChannels(); ++channel)
-            {
-              m_Source.startCell();
-              m_Destination.startCell();
-              m_Destination.processCell(data, chip, channel);
-              m_Source.endCell();
-              m_Destination.endCell();
-            }
+            m_Source.startCell();
+            m_Destination.startCell();
+            m_Destination.processCell(std::move(data), chip, channel);
+            m_Source.endCell();
+            m_Destination.endCell();
           }
           //
           m_Source.endChip();

@@ -58,16 +58,19 @@ void LCIOWriter::processCell(const Data& d, const std::uint32_t& chip, const std
   IMPL::RawCalorimeterHitImpl* hit = new IMPL::RawCalorimeterHitImpl;
   for(std::size_t memory = 0; memory != d.getChip(chip).getNumberColumns(); ++memory)
   {
-    cd["BCID"]    = d.getChip(chip).getBCIDs(memory);
-    cd["gain"]    = d.getChip(chip).getCharge(memory, channel).gain();
-    cd["hit"]     = d.getChip(chip).getCharge(memory, channel).hit();
-    cd["layer"]   = d.getLayer();
-    cd["chip"]    = d.getChip(chip).getID();
-    cd["channel"] = channel;
-    cd.setCellID(hit);
-    hit->setAmplitude(d.getChip(chip).getCharge(memory, channel).charge());
-    hit->setTimeStamp(d.getChip(chip).getTime(memory, channel).timestamp());
-    if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_LCEvent->parameters().setValue("Cherenkov", -1);
+    if(d.getChip(chip).getID() <= 10)  //FIXME
+    {
+      cd["BCID"]    = d.getChip(chip).getBCIDs(memory);
+      cd["gain"]    = d.getChip(chip).getCharge(memory, channel).gain();
+      cd["hit"]     = d.getChip(chip).getCharge(memory, channel).hit();
+      cd["layer"]   = d.getLayer();
+      cd["chip"]    = d.getChip(chip).getID();
+      cd["channel"] = channel;
+      cd.setCellID(hit);
+      hit->setAmplitude(d.getChip(chip).getCharge(memory, channel).charge());
+      hit->setTimeStamp(d.getChip(chip).getTime(memory, channel).timestamp());
+      if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_LCEvent->parameters().setValue("Cherenkov", -1);
+    }
   }
   m_CollectionVec->addElement(hit);
 }
