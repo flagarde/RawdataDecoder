@@ -1,8 +1,7 @@
 #include "DatManager.h"
 
-#include "Global.h"
 using namespace std;
-extern int  int_tmp = 0;
+int int_tmp = 0;
 int         DatManager::CatchEventBag(ifstream& f_in, vector<int>& buffer_v, long& cherenkov_counter)
 {
   //cout<<"catch a bag"<<endl;
