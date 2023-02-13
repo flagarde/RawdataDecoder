@@ -1,6 +1,1 @@
-/cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/Combined/mu+/AHCAL_Run336_20221102_054212.dat
-/cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/Combined/mu+/AHCAL_Run337_20221102_061242.dat
-/cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/Combined/mu+/AHCAL_Run338_20221102_064921.dat
-/cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/Combined/mu+/AHCAL_Run339_20221102_071752.dat
-/cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/Combined/mu+/AHCAL_Run340_20221102_073316.dat
-/cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/Combined/mu+/AHCAL_Run341_20221102_074406.dat
+/home/travel/AHCAL_Run148_20221024_092336.dat

@@ -11,7 +11,7 @@ DAT-ROOT:
   cherenkov: False
   #file-list: /cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/HCAL_alone/List_DIR/pi+/10GeV_list.txt
   file-list: list_dat.txt
-  output-dir: /cefs/higgs/shiyk/Beam_2022/DataBase/RawRoot/HCAL_alone/mu+/
+  output-dir: ~/MYYY
 
 
 #Pedestal analyse manager

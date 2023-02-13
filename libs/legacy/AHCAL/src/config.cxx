@@ -61,13 +61,6 @@ int Config::Run()
   return 1;
 }
 
-void Config::Print()
-{
-  YAML::Node example_config = YAML::LoadFile("/mnt2/SJTU/wangzhen/hbuana/config/config.yaml");
-  ofstream   fout("./config.yaml");
-  fout << example_config;
-  fout.close();
-}
 
 Config::Config() : conf(0) {}
 

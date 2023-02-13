@@ -16,7 +16,6 @@ public:
   Config();
   ~Config();
 
-  virtual void Print();
   virtual void Parse(const string config_file);
   virtual int  Run();
 };

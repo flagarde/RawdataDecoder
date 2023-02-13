@@ -21,7 +21,6 @@ int main(int argc, char* argv[])
       config.Parse(config_file);
       config.Run();
     }
-    else if(string(argv[i]) == "-x") { config.Print(); }
   }
   ////////////////////////
   endTime = clock();

@@ -2,7 +2,6 @@
 
 #include "Global.h"
 using namespace std;
-extern char char_tmp[200];
 extern int  int_tmp = 0;
 int         DatManager::CatchEventBag(ifstream& f_in, vector<int>& buffer_v, long& cherenkov_counter)
 {
@@ -31,60 +30,9 @@ int         DatManager::CatchEventBag(ifstream& f_in, vector<int>& buffer_v, lon
   else
     return 1;
 }
-int DatManager::CatchSPIROCBag(ifstream& f_in, vector<int>& buffer_v, int& layer_id, int& cycleID, int& triggerID)
-{
-  //cout<<"catch a bag"<<endl;
-  bool b_begin = 0;
-  bool b_end   = 0;
-  int  buffer  = 0;
-  while(!b_begin && f_in.read((char*)(&buffer), 1))
-  {
-    //cout<<hex<<buffer<<" ";
-    buffer_v.push_back(buffer);
-    if(buffer_v.size() > 4) buffer_v.erase(buffer_v.begin(), buffer_v.begin() + buffer_v.size() - 4);
-    if(buffer_v[0] == 0xfa && buffer_v[1] == 0x5a && buffer_v[2] == 0xfa && buffer_v[3] == 0x5a && buffer_v.size() == 4) b_begin = 1;
-  }
-  while(!b_end && f_in.read((char*)(&buffer), 1))
-  {
-    buffer_v.push_back(buffer);
-    int_tmp = buffer_v.size();
-    //if(int_tmp>4 && buffer_v[int_tmp-2] == 0xfe && buffer_v[int_tmp-1] == 0xee && buffer_v[int_tmp-4] == 0xfe && buffer_v[int_tmp-3] == 0xee) b_end=1;
-    if(int_tmp >= 4 && buffer_v[int_tmp - 2] == 0xfe && buffer_v[int_tmp - 1] == 0xee && buffer_v[int_tmp - 4] == 0xfe && buffer_v[int_tmp - 3] == 0xee) b_end = 1;
-  }
-  f_in.read((char*)(&buffer), 1);
-  if(buffer != 0xff)
-  {
-    cout << " abnormal layer ff " << hex << buffer << endl;
-    buffer_v.clear();
-    return 0;
-  }
-  f_in.read((char*)(&buffer), 1);
-  if(buffer < 0 || buffer > 39)
-  {
-    cout << " abnormal layer " << hex << buffer << endl;
-    buffer_v.clear();
-    return 0;
-  }
-  layer_id = buffer;
-  //cout<<"cycleID "<<hex<<cycleID<<endl;
-  if((buffer_v.size()) % 2)
-  {
-    cout << "wrong bag size " << dec << buffer_v.size() << endl;
-    buffer_v.clear();
-    return 0;  //b_readover
-  }
-  for(int i = 0; i < buffer_v.size() / 2; ++i) { buffer_v[i] = buffer_v[2 * i] * 0x100 + buffer_v[2 * i + 1]; }
-  buffer_v.erase(buffer_v.begin() + buffer_v.size() / 2, buffer_v.end());
-  cycleID   = buffer_v[2] * 0x10000 + buffer_v[3];
-  triggerID = buffer_v[4];
-  buffer_v.erase(buffer_v.begin() + 2, buffer_v.begin() + 5);
-  if(f_in.eof()) return 0;
-  else
-    return 1;
-}
+
 int DatManager::CatchSPIROCBag(vector<int>& EventBuffer_v, vector<int>& buffer_v, int& layer_id, int& cycleID, int& triggerID)
 {
-  //cout<<"catch a bag"<<endl;
   if(EventBuffer_v.size() < 74)
   {
     EventBuffer_v.clear();
@@ -93,7 +41,6 @@ int DatManager::CatchSPIROCBag(vector<int>& EventBuffer_v, vector<int>& buffer_v
   buffer_v.clear();
   bool b_begin = 0;
   bool b_end   = 0;
-  int  buffer  = 0;
   int  i_begin = 0;
   int  i_end   = 0;
   for(int i = 0; i < EventBuffer_v.size(); ++i)
@@ -112,7 +59,6 @@ int DatManager::CatchSPIROCBag(vector<int>& EventBuffer_v, vector<int>& buffer_v
   }
   buffer_v.assign(EventBuffer_v.begin() + i_begin, EventBuffer_v.begin() + i_end + 1);
   EventBuffer_v.erase(EventBuffer_v.begin(), EventBuffer_v.begin() + i_end + 1);
-  //Read in buffer over
   if((b_begin * b_end) == 0)
   {
     buffer_v.clear();
@@ -139,7 +85,6 @@ int DatManager::CatchSPIROCBag(vector<int>& EventBuffer_v, vector<int>& buffer_v
   }
   layer_id = EventBuffer_v[1];
   EventBuffer_v.erase(EventBuffer_v.begin(), EventBuffer_v.begin() + 2);
-  //cout<<"cycleID "<<hex<<cycleID<<endl;
   if((buffer_v.size()) % 2)
   {
     cout << "wrong bag size " << dec << buffer_v.size() << endl;
@@ -203,11 +148,6 @@ int DatManager::DecodeAEvent(vector<int>& chip_v, int layer_id, int Memo_ID, con
       _gainTag.push_back(-1);
     }
   }
-  /*for (int i = 0; i < chip_v.size(); ++i){
-        cout<<hex<<chip_v[i]<<" ";
-    }
-    cout<<endl;
-    */
   chip_v.erase(chip_v.end() - 2, chip_v.end() - 1);
   chip_v.erase(chip_v.begin() + offset, chip_v.begin() + offset + 72);
   if(chip_v.size() == 1) chip_v.clear();
@@ -218,7 +158,6 @@ int DatManager::FillChipBuffer(vector<int>& buffer_v, int cycleID, int triggerID
   int size = buffer_v.size();
   if(size < 4)
   {
-    //cout<<"FillChipBuffer:wrong bag size "<<size<<endl;
     buffer_v.clear();
     return 0;
   }
@@ -234,18 +173,12 @@ int DatManager::FillChipBuffer(vector<int>& buffer_v, int cycleID, int triggerID
     buffer_v.erase(buffer_v.end() - 2, buffer_v.end());
     size = buffer_v.size();
   }
-  for(int i = 0; i < buffer_v.size(); ++i)
-  {
-    //cout<<hex<<buffer_v[i]<<" ";
-  }
   for(int i = channel_FEE; i < buffer_v.size(); i = i + channel_FEE)
   {
-    //cout<<dec<<i<<" "<<buffer_v.size()<<" "<<hex<<buffer_v[i]<<endl;
     if(buffer_v[i] < 1 || buffer_v[i] > 9) continue;
     int chip = buffer_v[i] - 1;
     _chip_v[layer_id][chip].assign(buffer_v.begin(), buffer_v.begin() + i + 1);
     buffer_v.erase(buffer_v.begin(), buffer_v.begin() + i + 1);
-    //cout<<endl<<dec<<_chip_v[layer_id][chip].back()<<" FillChipBuffer "<<" "<<buffer_v.size()<<endl;
     i = 0;
   }
   if(buffer_v.size())
@@ -286,7 +219,6 @@ int DatManager::Decode(const string& input_file, const string& output_file, cons
       _chip_v[i_layer][i_chip].clear();
     }
   }
-  //string str_out=outputDir+"/"+"cosmic.root";
   string tmp_string = input_file;
   tmp_string        = tmp_string.substr(tmp_string.find_last_of('/') + 1);
   tmp_string        = tmp_string.substr(0, tmp_string.find_last_of('.'));
@@ -306,12 +238,10 @@ int DatManager::Decode(const string& input_file, const string& output_file, cons
   SetTreeBranch(tree);
   int          Bag_No              = 0;
   int          Event_No            = 0;
-  int          Cherenkov_signal    = 0;
   int          Cherenkov_Event_No1 = 0;
   int          Cherenkov_Event_No2 = 0;
   int          Cherenkov_Event_No  = 0;
   int          Abnormal_Event_No   = 0;
-  int          coincidence_No      = 0;
   int          Loop_No             = 0;
   unsigned int last_Event_Time     = 0;
   long         cherenkov_counter   = 0;
@@ -319,15 +249,11 @@ int DatManager::Decode(const string& input_file, const string& output_file, cons
   long         pre_cycleID         = 0;
   long         last_trigID         = -1;
   long         last_cycleID        = -1;
-  long         tmp_ID              = 0;
-  bool         b_ReadOver          = 1;
   bool         b_chipbuffer        = 0;
   bool         b_Event             = 0;
   cout << " Start Read " << str_out << " auto gain: " << b_auto_gain << " cherenkov: " << b_cherenkov << " Run:" << _Run_No << endl;
   while(!(f_in.eof()) || b_chipbuffer)
   {
-    //while((!(f_in.eof()) || b_chipbuffer) && Event_No<=1E4){
-    //if(Event_No%1000==0)cout<<"Event_No: "<<Event_No<<" Bag_No "<<Bag_No<<endl;
     _buffer_v.clear();
     _EventBuffer_v.clear();
     CatchEventBag(f_in, _EventBuffer_v, cherenkov_counter);
@@ -357,7 +283,6 @@ int DatManager::Decode(const string& input_file, const string& output_file, cons
       if(triggerID != pre_trigID)
       {
         b_Event = 1;
-        //cout<<pre_cycleID<<" "<<pre_trigID<<" abnormal ID "<<cycleID<<" "<<triggerID<<endl;
         _buffer_v.clear();
         continue;
       }
@@ -392,7 +317,6 @@ int DatManager::Decode(const string& input_file, const string& output_file, cons
         }
       }
       _Event_Time = (cherenkov_counter & 0x3fffffff);
-      //if(_Event_Time==last_Event_Time)cout<<"abnormal Event Time "<<_Event_Time<<" "<<last_Event_Time<<" "<<hex<<pre_trigID<<" "<<last_trigID<<endl;
       if(b_cherenkov)
       {
         _cherenkov.push_back((cherenkov_counter & 0x80000000) / 0x80000000);
@@ -450,81 +374,5 @@ void DatManager::BranchClear()
   _Hit_Time.clear();
   _cherenkov.clear();
 }
-/*int raw2Root::RMFelixTag(string inputDir,string outputDir){
-    ifstream f_datalist,f_in[Layer_No];
-    ofstream f_out[Layer_No];
-    string str_datalist=inputDir+"/datalist";
-    f_datalist.open(str_datalist,ios::in);
-    if (!f_datalist){
-        cout<<"cant open "<<str_datalist<<endl;
-        return 0;
-    }
-    for (int i = 0; f_datalist>>str_tmp; ++i){
-        f_in[i].open(str_tmp,ios::in);
-        if (!f_in[i]){
-            cout<<"f_in cant open "<<str_tmp<<endl;
-            continue;
-        }
-        else cout<<"Read "<<str_tmp<<endl;
-        str_tmp=find_datname(str_tmp);
-        str_tmp=outputDir+"/"+str_tmp+".dat";
-        cout<<str_tmp<<endl;
-        f_out[i].open(str_tmp,ios::out|ios::binary);
-        if (!f_out[i]){
-            cout<<"f_out cant open "<<str_tmp<<endl;
-            continue;
-        }
-        else cout<<"Write "<<str_tmp<<endl;
-        bool b_felix=0;
-        int buffer=0;
-        int size=0;
-        int count=0;
-        std::vector<int> v;
-        //ffff 0000 baba 5afff ******* ffa5 abab 0000 ffff
-        while(f_in[i].read((char*)(&buffer),1)){
-            count++;
-            v.push_back(buffer);
-            int size = v.size();
-            if( count>=6 && count%1024 == 4 && v[size-1] == 0xab && v[size-2] == 0xcd){
-                v.erase(v.end()-6,v.end());
-                continue;
-            }
-            if( size%2==1 || size<8 )continue;
-            if( v[size-1]==0xff && v[size-2]==0xff && v[size-3]==0x00 && v[size-4]==0x00 &&
-                v[size-5]==0xab && v[size-6]==0xab && v[size-7]==0xa5 && v[size-8]==0xff){//ffa5 abab 0000 ffff
-                v.clear();
-                v.push_back(0x00);v.push_back(0x00);v.push_back(0xff);v.push_back(0xff);//0000 ffff
-                continue;
-            }
-            if( v[size-1]==0xff && v[size-2]==0x5a && v[size-3]==0xba && v[size-4]==0xba &&
-                v[size-5]==0x00 && v[size-6]==0x00 && v[size-7]==0xff && v[size-8]==0xff){//ffff 0000 baba 5aff
-                if(v[0]==0x00 && v[1]==0x00 && v[2]==0xff && v[3]==0xff) v.erase(v.begin(),v.begin()+4);
-                v.erase(v.end()-8,v.end());
-                size=v.size();
-                /*if(v[size-20]==0xfa && v[size-19]==0x23 && v[size-16]==0xcd && v[size-15]==0xab){
-                    v.erase(v.end()-20,v.end()-14);
-                    size=v.size();
-                }
-                else cout<<"no felix tag before"<<hex<<v[size-20]<<" "<<v[size-19]<<" "<<v[size-18]<<" "<<v[size-17]<<" "<<v[size-16]<<" "<<endl;
-                for (int i_v = 0; i_v < size; ++i_v){
-                    buffer=v[i_v];
-                    f_out[i].write((char*)(&buffer),1);
-                }
-                v.clear();
-                v.push_back(0xff);v.push_back(0xff);v.push_back(0x00);v.push_back(0x00);//ffff 0000
-                continue;
-            }
-        }
-        if(v[0]==0xff && v[1]==0xff && v[2]==0x00 && v[3]==0x00) v.clear();
-        else if(v[0]==0x00 && v[1]==0x00 && v[2]==0xff && v[3]==0xff){
-            for (int i_v = 4; i_v < v.size(); ++i_v){
-                buffer=v[i_v];
-                f_out[i].write((char*)(&buffer),1);
-            }
-        }
-        else cout<<"Felix Tag error "<<hex<<v[0]<<v[1]<<v[2]<<v[3]<<endl;
-        v.clear();
-    }
-    return 1;
-}*/
+
 DatManager::~DatManager() {}

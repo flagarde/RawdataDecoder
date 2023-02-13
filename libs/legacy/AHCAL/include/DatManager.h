@@ -43,7 +43,6 @@ public:
   int  Decode(const string& binary_name, const string& raw_name, const bool b_auto_gain = 0, const bool b_cherenkov = 0);
   int  CatchEventBag(ifstream& f_in, vector<int>& buffer_v, long& cherenkov_counter);
   int  CatchSPIROCBag(vector<int>& EventBuffer_v, vector<int>& buffer_v, int& layer_id, int& cycleID, int& triggerID);
-  int  CatchSPIROCBag(ifstream& f_in, vector<int>& buffer_v, int& layer_id, int& cycleID, int& triggerID);
   void SetTreeBranch(TTree* tree);
   void BranchClear();
   int  DecodeAEvent(vector<int>& chip_v, int layer_ID, int Memo_ID, const bool b_auto_gain);
