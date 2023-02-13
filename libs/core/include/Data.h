@@ -80,6 +80,7 @@ public:
   Data(const Buffer& buffer) : m_Buffer(buffer) {}
   void parse()
   {
+    m_chip.clear();
     m_Layer = m_Buffer[m_Buffer.size() - 1];
     if(m_Buffer.size() == 14 || m_Buffer.size() == 16) m_isEmpty = true;
     if(!empty())
@@ -107,48 +108,42 @@ public:
   bool          empty() const { return m_isEmpty; }
   int           getDetectorID() const { return static_cast<int>(m_detectoID); }
 
-  std::size_t getChipsNumber() const { return m_chip.size(); }
-  Chip        getChip(const int& i) const { return m_chip[i]; }
+  std::uint16_t getNumberChips() { return (m_Data.size()) / (74 * 2); };
+  std::uint16_t getNumberOrphanBits() { return (m_Data.size()) % (74 * 2); }
+  std::uint16_t getCaretPosition() { return m_Caret; }
+  std::size_t   getChipsNumber() const { return m_chip.size(); }
+  Chip          getChip(const int& i) const { return m_chip[i]; }
 
   std::size_t dataSize() const { return m_Data.size(); }
   Buffer      getData() const { return m_Data; }
   Buffer      getBuffer() const { return m_Buffer; }
-  bool        isTemperatureInfos()
-  {
-    if(m_detectoID == DetectorID::ECAL && m_Layer == 39) return true;
-    else if(m_detectoID == DetectorID::ECAL && m_Layer == 47)
-      return true;
-    else
-      return false;
-  }
 
 private:
   void createChips()
   {
-    std::size_t nbrChips = (m_Data.size()) / (74 * 2);  //(size()) / (( 36 charges + 36 times + BCID(2bits) )*2)
-    std::size_t caret{0};
-    for(std::size_t chip = 0; chip != nbrChips; ++chip)
+    m_Caret = 0;
+    for(std::size_t chip = 0; chip != getNumberChips(); ++chip)
     {
       Chip                                      mychip;
       std::array<Charge, Chip::m_numberChannel> charges;
       for(std::size_t charge = Chip::m_numberChannel; charge != 0; --charge)
       {
-        charges[charge - 1] = m_Data[caret] * 0x100 + m_Data[caret + 1];
-        caret += 2;
+        charges[charge - 1] = m_Data[m_Caret] * 0x100 + m_Data[m_Caret + 1];
+        m_Caret += 2;
       }
       mychip.addCharges(charges);
       std::array<Time, Chip::m_numberChannel> times;
       for(std::size_t time = Chip::m_numberChannel; time != 0; --time)
       {
-        times[time - 1] = m_Data[caret] * 0x100 + m_Data[caret + 1];
-        caret += 2;
+        times[time - 1] = m_Data[m_Caret] * 0x100 + m_Data[m_Caret + 1];
+        m_Caret += 2;
       }
       mychip.addTimes(times);
-      mychip.addBCID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
-      caret += 2;
-      mychip.setID(m_Data[caret] * 0x100 + m_Data[caret + 1]);
+      mychip.addBCID(m_Data[m_Caret] * 0x100 + m_Data[m_Caret + 1]);
+      m_Caret += 2;
+      mychip.setID(m_Data[m_Caret] * 0x100 + m_Data[m_Caret + 1]);
       m_chip.push_back(mychip);
-      caret += 2;
+      m_Caret += 2;
     }
   }
   DetectorID                         m_detectoID{DetectorID::Unkown};
@@ -163,4 +158,5 @@ private:
   Buffer                             m_Data;
   std::vector<Chip>                  m_chip;
   bool                               m_isEmpty{false};
+  std::size_t                        m_Caret{0};
 };

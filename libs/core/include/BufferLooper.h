@@ -125,11 +125,9 @@ fmt::format(fg(fmt::color::red) | fmt::emphasis::bold, "v{}", rawdatadecoder_ver
           continue;
         }
         eventEmpty = false;
-        if(data.isTemperatureInfos())
-        {
-          log()->error("Temperature info layer({})", data.getLayer());
-          continue;
-        }
+
+        log()->warn("Layer {} has {} ({} orphan bits) processed {} over {} bits", data.getLayer(), data.getNumberChips(), data.getNumberOrphanBits(), data.getCaretPosition(), data.dataSize());
+
         m_Destination.processDIF(std::move(data));  // layer infos
 
         // DIF
