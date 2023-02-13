@@ -1,8 +1,6 @@
 #include "config.h"
 
-#include "DacManager.h"
 #include "DatManager.h"
-#include "PedestalManager.h"
 
 #include <fstream>
 
@@ -43,14 +41,10 @@ int Config::Run()
     if(conf["Pedestal"]["Cosmic"]["on-off"].as<bool>())
     {
       cout << "Pedestal mode for cosmic events: ON" << endl;
-      PedestalManager pedmanager(conf["Pedestal"]["Cosmic"]["output-file"].as<string>().c_str());
-      pedmanager.AnaPedestal(conf["Pedestal"]["Cosmic"]["file-list"].as<std::string>(), 0);
     }
     if(conf["Pedestal"]["DAC"]["on-off"].as<bool>())
     {
       cout << "Pedestal mode for DAC events: ON" << endl;
-      PedestalManager pedmanager(conf["Pedestal"]["DAC"]["output-file"].as<string>().c_str());
-      pedmanager.AnaPedestal(conf["Pedestal"]["DAC"]["file-list"].as<std::string>(), 1);
     }
   }
   if(conf["Calibration"]["on-off"].as<bool>())
@@ -58,16 +52,10 @@ int Config::Run()
     if(conf["Calibration"]["Cosmic"]["on-off"].as<bool>())
     {
       cout << "Cosmic calibration mode:ON" << endl;
-      DacManager dacmanager("cosmic_calib.root");
-      dacmanager.SetPedestal(conf["Calibration"]["Cosmic"]["ped-file"].as<string>().c_str());
-      dacmanager.AnaDac(conf["Calibration"]["Cosmic"]["file-list"].as<std::string>(), "cosmic");
     }
     if(conf["Calibration"]["DAC"]["on-off"].as<bool>())
     {
       cout << "DAC Calibration mode:ON" << endl;
-      DacManager dacmanager("dac_calib.root");
-      dacmanager.SetPedestal(conf["Calibration"]["DAC"]["ped-file"].as<string>().c_str());
-      dacmanager.AnaDac(conf["Calibration"]["DAC"]["file-list"].as<std::string>().c_str(), "dac");
     }
   }
   return 1;
