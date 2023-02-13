@@ -1,9 +1,5 @@
 find_package(yaml-cpp REQUIRED)
-include_directories(src)
-include_directories(include)
-include_directories(${YAML_CPP_INCLUDE_DIR})
-#add executable
 add_executable(hbuana src/main.cxx src/DatManager.cxx src/PedestalManager.cxx src/DacManager.cxx src/config.cxx)
-#link libraries
-target_link_libraries(hbuana ${ROOT_LIBRARIES} yaml-cpp)
-install(TARGETS hbuana)
+target_link_libraries(hbuana PRIVATE ROOT::Core ROOT::Tree ROOT::Hist ROOT::Graf ROOT::Gpad yaml-cpp)
+target_include_directories(hbuana PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+install(TARGETS hbuana DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
