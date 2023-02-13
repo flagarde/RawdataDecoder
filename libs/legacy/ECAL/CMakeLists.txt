@@ -1,0 +1,8 @@
+add_library(LegacyRawdata src/Decode.cxx)
+target_include_directories(LegacyRawdata PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/ROOTWriter>)
+set_target_properties(LegacyRawdata PROPERTIES PUBLIC_HEADER "include/RawtoRoot.h")
+target_link_libraries(LegacyRawdata ROOT::Core ROOT::Tree Interfaces::Utilities)
+target_compile_features(LegacyRawdata PUBLIC ${ROOT_CXX_STANDARD})
+#install(TARGETS LegacyRawdata EXPORT LegacyRawdataTargets INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/interfaces/ROOTWriter" PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder/interfaces/ROOTWriter")
+#install(EXPORT LegacyRawdata FILE LegacyRawdataTargets.cmake NAMESPACE RawdataDecoder:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/RawdataDecoder")
+add_library(RawdataDecoder::LegacyRawdata ALIAS LegacyRawdata)

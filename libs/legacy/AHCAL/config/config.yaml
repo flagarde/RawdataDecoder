@@ -1,0 +1,38 @@
+#Printing version information
+hbuana:
+  version: 1.0
+  github: "https://github.com/wangz1996/hbuana"
+
+#Dat file to ROOT Decoder
+DAT-ROOT:
+  on-off: DECODESWITCH
+  file-list: list_dat.txt
+  output-dir: OUTPUTPATHHERE
+
+#Pedestal analyse manager
+Pedestal:
+  on-off: False
+  #If work in cosmic mode (hittag==0)
+  Cosmic:
+    on-off: False
+    file-list: "/workfs2/atlas/wangz1996/cepc/ahcal/github/hbuana/config/list_cosmic.txt"
+    output-file: "cosmic_pedestal.root"
+  #If work in DAC mode (hittag==1 and skip the calibration channel)
+  DAC:
+    on-off: False
+    file-list: "/workfs2/atlas/wangz1996/cepc/ahcal/github/hbuana/config/list_dac.txt"
+    output-file: "dac_pedestal.root"
+
+#DAC Calibration Manager
+Calibration:
+  on-off: False
+  #If work in cosmic mode
+  Cosmic:
+    on-off: False
+    file-list: "/workfs2/atlas/wangz1996/cepc/ahcal/github/hbuana/config/list_cosmic.txt"
+    ped-file: "/workfs2/atlas/wangz1996/cepc/ahcal/github/hbuana/config/pedestal_cosmic.root"
+  #If work in DAC mode
+  DAC:
+    on-off: False
+    file-list: "/workfs2/atlas/wangz1996/cepc/ahcal/github/hbuana/config/list_dac.txt"
+    ped-file: "/workfs2/atlas/wangz1996/cepc/ahcal/github/hbuana/config/pedestal_dac.root"

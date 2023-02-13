@@ -1,0 +1,45 @@
+#Printing version information
+hbuana:
+  version: 1.0
+  github: git@github.com:wangz1996/cepc_hbuana.git
+
+
+#Dat file to ROOT Decoder
+DAT-ROOT:
+  on-off: True
+  auto-gain: False
+  cherenkov: False
+  #file-list: /cefs/higgs/shiyk/Beam_2022/BeamData/HCAL/Particle/HCAL_alone/List_DIR/pi+/10GeV_list.txt
+  file-list: list_dat.txt
+  output-dir: /cefs/higgs/shiyk/Beam_2022/DataBase/RawRoot/HCAL_alone/e+/120GeV
+
+
+#Pedestal analyse manager
+Pedestal:
+  on-off: False
+  #If work in cosmic mode (hittag==0)
+  Cosmic:
+    on-off: False
+    file-list: list.txt
+    output-file: cosmic_pedestal.root
+    usemt: False
+  #If work in DAC mode (hittag==1 and skip the calibration channel)
+  DAC:
+    on-off: False
+    file-list: list.txt
+    output-file: dac_pedestal.root
+
+
+#DAC Calibration Manager
+Calibration:
+  on-off: False
+  #If work in cosmic mode
+  Cosmic:
+    on-off: False
+    file-list: list.txt
+    ped-file: pedestal_cosmic.root
+  #If work in DAC mode
+  DAC:
+    on-off: False
+    file-list: list.txt
+    ped-file: pedestal_dac.root

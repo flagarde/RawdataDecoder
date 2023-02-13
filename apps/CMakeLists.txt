@@ -10,6 +10,6 @@ install(TARGETS RawdataToROOT)
 
 add_subdirectory(compare)
 
-add_executable(LegacyHCALRawdataToROOT LegacyHCALRawdataToROOT.cc)
-target_link_libraries(LegacyHCALRawdataToROOT PRIVATE RawdataDecoder::LegacyRawdata RawdataDecoder::Filesystem CLI11::CLI11)
-install(TARGETS LegacyHCALRawdataToROOT)
+add_executable(LegacyECALRawdataToROOT LegacyECALRawdataToROOT.cc)
+target_link_libraries(LegacyECALRawdataToROOT PRIVATE RawdataDecoder::LegacyRawdata RawdataDecoder::Filesystem CLI11::CLI11)
+install(TARGETS LegacyECALRawdataToROOT)
