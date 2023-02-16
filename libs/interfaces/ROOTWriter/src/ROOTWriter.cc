@@ -13,6 +13,8 @@ void ROOTWriter::setFilename(const std::string& filename) { m_Filename = filenam
 ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "1.0.0")
 {
   addCompatibility("RawdataReader", ">=1.0.0");
+  myfile.open("BAD_CHID_ID_" + m_Filename + ".txt");
+  myfile << "Event,Layer,Chip,Channel\n";
 }
 
 void ROOTWriter::processHeader(const Buffer& d)
@@ -93,7 +95,7 @@ void ROOTWriter::processCell(const Data& d, const std::uint32_t& chip, const std
   //std::cout<<d.getChip(chip).getNumberColumns()<<std::endl;
   for(std::size_t i = 0; i != d.getChip(chip).getNumberColumns(); ++i)
   {
-    if(d.getChip(chip).getID() <= 10)  //FIXME
+    if(d.getChip(chip).getID() <= 9)  //FIXME
     {
       m_hitTag.push_back(d.getChip(chip).getCharge(i, channel).hit());
       m_gainTag.push_back(d.getChip(chip).getCharge(i, channel).gain());
@@ -107,6 +109,7 @@ void ROOTWriter::processCell(const Data& d, const std::uint32_t& chip, const std
       m_memory.push_back(i);
       if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_cherenkov = -1;
     }
+    else { myfile << m_eventNumber << "," << d.getLayer() << "," << d.getChip(chip).getID() << "," << channel << "\n"; }
   }
 }
 

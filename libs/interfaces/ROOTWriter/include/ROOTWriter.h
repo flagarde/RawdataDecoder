@@ -10,9 +10,10 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
-
 class ROOTWriter : public InterfaceWriter
 {
 public:
@@ -57,4 +58,5 @@ private:
   std::vector<int>    m_chip;
   std::vector<int>    m_layer;
   std::vector<int>    m_memory;
+  std::ofstream       myfile;
 };
