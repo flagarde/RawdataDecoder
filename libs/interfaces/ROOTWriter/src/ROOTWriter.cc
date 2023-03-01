@@ -103,6 +103,7 @@ void ROOTWriter::processCell(const Data& d, const std::uint32_t& chip, const std
     m_charge.push_back(d.getChip(chip).getCharge(i, channel).charge());
     m_bcid.push_back(d.getChip(chip).getBCIDs(i));
     CellID myCellID(d.getLayer(), d.getChip(chip).getID(), i, channel);
+    if(d.getLayer() != myCellID.getLayerID() || d.getChip(chip).getID() != myCellID.getCellID() || i != myCellID.getMemory() || channel != myCellID.getChannel()) throw("Problem encoding CellID");
     m_cellID.push_back(myCellID.getCellID());
     m_channel.push_back(channel);
     m_chip.push_back(d.getChip(chip).getID());
