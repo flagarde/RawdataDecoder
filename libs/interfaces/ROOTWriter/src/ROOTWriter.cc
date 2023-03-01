@@ -11,7 +11,7 @@
 
 void ROOTWriter::setFilename(const std::string& filename) { m_Filename = filename; }
 
-ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "1.0.0")
+ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "2.0.0")
 {
   addCompatibility("RawdataReader", ">=1.0.0");
   //myfile.open("BAD_CHID_ID_" + m_Filename + ".txt");

@@ -15,7 +15,7 @@
 
 void LCIOWriter::setFilename(const std::string& filename) { m_Filename = filename; }
 
-LCIOWriter::LCIOWriter() : InterfaceWriter("LCIOWriter", "1.0.0"), m_LCWriter(IOIMPL::LCFactory::getInstance()->createLCWriter()) { addCompatibility("RawdataReader", ">=1.0.0"); }
+LCIOWriter::LCIOWriter() : InterfaceWriter("LCIOWriter", "2.0.0"), m_LCWriter(IOIMPL::LCFactory::getInstance()->createLCWriter()) { addCompatibility("RawdataReader", ">=1.0.0"); }
 
 void LCIOWriter::start(const VersionInfos& ver)
 {

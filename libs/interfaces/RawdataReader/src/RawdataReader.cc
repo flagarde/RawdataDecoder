@@ -14,7 +14,7 @@ std::size_t RawdataReader::m_BufferSize = 20000000;
 
 Buffer RawdataReader::getEventBuffer() { return m_buf; }
 
-RawdataReader::RawdataReader(const char* fileName) : InterfaceReader("RawdataReader", "1.0.0")
+RawdataReader::RawdataReader(const char* fileName) : InterfaceReader("RawdataReader", "2.0.0")
 {
   m_buf.reserve(m_BufferSize);
   m_Filename = fileName;
