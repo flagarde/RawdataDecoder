@@ -5,7 +5,7 @@
 
 #include "ROOTWriter.h"
 
-#include "CellID.hpp"
+#include "CellID.h"
 #include "Header.h"
 #include "InfosFromFilename.h"
 

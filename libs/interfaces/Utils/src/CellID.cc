@@ -1,4 +1,4 @@
-#include "CellID.hpp"
+#include "CellID.h"
 
 std::string CellID::m_LCIOCellIDEncoderString = {"BCID:16,gain:1,hit:1,layer:8,chip:8,memory:8,channel:8"};
 

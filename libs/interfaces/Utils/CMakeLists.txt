@@ -1,4 +1,4 @@
-add_library(Utilities src/InfosFromFilename.cc src/Header.cc)
+add_library(Utilities src/InfosFromFilename.cc src/Header.cc src/CellID.cc)
 target_include_directories(Utilities PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/RawDataReader/interfaces/Utilities>)
 target_link_libraries(Utilities PRIVATE RawdataDecoder::RawdataDecoder)
 set_target_properties(Utilities PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/include/InfosFromFilename.h")

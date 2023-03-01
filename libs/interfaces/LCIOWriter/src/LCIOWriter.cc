@@ -4,7 +4,7 @@
 
 #include "LCIOWriter.h"
 
-#include "CellID.hpp"
+#include "CellID.h"
 #include "Header.h"
 #include "IMPL/LCFlagImpl.h"
 #include "IMPL/LCRunHeaderImpl.h"

@@ -14,12 +14,6 @@ target_include_directories(Filesystem PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_S
 set_target_properties(Filesystem PROPERTIES PUBLIC_HEADER "include/Filesystem.h")
 add_library(RawdataDecoder::Filesystem ALIAS Filesystem)
 
-add_library(CellID src/CellID.cpp)
-target_include_directories(CellID PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/Utility>)
-set_target_properties(CellID PROPERTIES PUBLIC_HEADER "include/CellID.h")
-add_library(Utility::CellID ALIAS CellID)
-install(TARGETS CellID EXPORT CellIDTargets INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Utility/" PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/Utility/")
-
 add_library(RawdataDecoder src/Bits.cc src/Version.cc src/Formatters.cc src/Filesystem.cc)
 target_include_directories(RawdataDecoder PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/RawdataDecoder>)
 target_link_libraries(RawdataDecoder PUBLIC spdlog::spdlog fmt::fmt semver::semver AppVersion RawdataDecoder::Filesystem)
