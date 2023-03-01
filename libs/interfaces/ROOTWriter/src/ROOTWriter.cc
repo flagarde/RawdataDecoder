@@ -14,8 +14,8 @@ void ROOTWriter::setFilename(const std::string& filename) { m_Filename = filenam
 ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "1.0.0")
 {
   addCompatibility("RawdataReader", ">=1.0.0");
-  myfile.open("BAD_CHID_ID_" + m_Filename + ".txt");
-  myfile << "Event,Layer,Chip,Channel\n";
+  //myfile.open("BAD_CHID_ID_" + m_Filename + ".txt");
+  //myfile << "Event,Layer,Chip,Channel\n";
 }
 
 void ROOTWriter::processHeader(const Buffer& d)
@@ -103,8 +103,6 @@ void ROOTWriter::processCell(const Data& d, const std::uint32_t& chip, const std
     m_charge.push_back(d.getChip(chip).getCharge(i, channel).charge());
     m_bcid.push_back(d.getChip(chip).getBCIDs(i));
     CellID myCellID(d.getLayer(), d.getChip(chip).getID(), i, channel);
-    std::cout << myCellID.getCellID() << std::endl;
-    std::cout << d.getLayer() << " " << myCellID.getLayerID() << " " << d.getChip(chip).getID() << " " << myCellID.getChipID() << " " << i << " " << myCellID.getMemory() << " " << channel << " " << myCellID.getChannel() << std::endl;
     m_cellID.push_back(myCellID.getCellID());
     m_channel.push_back(channel);
     m_chip.push_back(d.getChip(chip).getID());

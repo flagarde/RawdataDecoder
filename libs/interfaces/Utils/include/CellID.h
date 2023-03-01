@@ -31,10 +31,10 @@ public:
   explicit CellID(const std::uint32_t&);
   CellID(const std::uint8_t& layer, const std::uint8_t& chip, const std::uint8_t& memory, const std::uint8_t& channel);
   void               set(const std::uint8_t& layer, const std::uint8_t& chip, const std::uint8_t& memory, const std::uint8_t& channel);
-  std::uint8_t       getLayerID();
-  std::uint8_t       getChipID();
-  std::uint8_t       getMemory();
-  std::uint8_t       getChannel();
+  int                getLayerID();
+  int                getChipID();
+  int                getMemory();
+  int                getChannel();
   std::uint32_t      getCellID();
   static std::string getCellIDEncoderString();
 

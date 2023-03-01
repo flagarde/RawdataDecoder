@@ -10,12 +10,12 @@ std::uint32_t CellID::getCellID() { return m_cellID; }
 
 CellID::CellID(const std::uint8_t& layer, const std::uint8_t& chip, const std::uint8_t& memory, const std::uint8_t& channel) { set(layer, chip, memory, channel); }
 
-void CellID::set(const std::uint8_t& layer, const std::uint8_t& chip, const std::uint8_t& memory, const std::uint8_t& channel) { m_cellID = layer << 24 + chip << 16 + memory << 8 + channel; }
+void CellID::set(const std::uint8_t& layer, const std::uint8_t& chip, const std::uint8_t& memory, const std::uint8_t& channel) { m_cellID = (layer << 24) + (chip << 16) + (memory << 8) + channel; }
 
-std::uint8_t CellID::getLayerID() { return (m_cellID >> 24) && 0xFF; }
+int CellID::getLayerID() { return (m_cellID >> 24) & 0xFF; }
 
-std::uint8_t CellID::getChipID() { return (m_cellID >> 16) && 0xFF; }
+int CellID::getChipID() { return (m_cellID >> 16) & 0xFF; }
 
-std::uint8_t CellID::getMemory() { return (m_cellID >> 8) && 0xFF; }
+int CellID::getMemory() { return (m_cellID >> 8) & 0xFF; }
 
-std::uint8_t CellID::getChannel() { return (m_cellID) && 0xFF; }
+int CellID::getChannel() { return (m_cellID)&0xFF; }
