@@ -13,7 +13,7 @@ void ROOTWriter::setFilename(const std::string& filename) { m_Filename = filenam
 
 ROOTWriter::ROOTWriter() : InterfaceWriter("ROOTWriter", "2.0.0")
 {
-  addCompatibility("RawdataReader", ">=1.0.0");
+  addCompatibility("RawdataReader", ">=2.0.0");
   //myfile.open("BAD_CHID_ID_" + m_Filename + ".txt");
   //myfile << "Event,Layer,Chip,Channel\n";
 }
