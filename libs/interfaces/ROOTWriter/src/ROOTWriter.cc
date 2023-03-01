@@ -5,6 +5,7 @@
 
 #include "ROOTWriter.h"
 
+#include "CellID.hpp"
 #include "Header.h"
 #include "InfosFromFilename.h"
 
@@ -95,21 +96,22 @@ void ROOTWriter::processCell(const Data& d, const std::uint32_t& chip, const std
   //std::cout<<d.getChip(chip).getNumberColumns()<<std::endl;
   for(std::size_t i = 0; i != d.getChip(chip).getNumberColumns(); ++i)
   {
-    if(d.getChip(chip).getID() <= 9)  //FIXME
-    {
-      m_hitTag.push_back(d.getChip(chip).getCharge(i, channel).hit());
-      m_gainTag.push_back(d.getChip(chip).getCharge(i, channel).gain());
-      m_time.push_back(d.getChip(chip).getTime(i, channel).timestamp());
-      m_charge.push_back(d.getChip(chip).getCharge(i, channel).charge());
-      m_bcid.push_back(d.getChip(chip).getBCIDs(i));
-      m_cellID.push_back(d.getLayer() * 1e7 + d.getChip(chip).getID() * 1e4 + i * 1e2 + channel);
-      m_channel.push_back(channel);
-      m_chip.push_back(d.getChip(chip).getID());
-      m_layer.push_back(d.getLayer());
-      m_memory.push_back(i);
-      if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_cherenkov = -1;
-    }
-    else { myfile << m_eventNumber << "," << d.getLayer() << "," << d.getChip(chip).getID() << "," << channel << "\n"; }
+    if(d.getChip(chip).getID() >= 10) log()->error("Chip_id >=10 ({}) : Layer {} Chip {} memory {} channel {}", d.getChip(chip).getID(), d.getLayer(), d.getChip(chip).getID(), i, channel);
+    m_hitTag.push_back(d.getChip(chip).getCharge(i, channel).hit());
+    m_gainTag.push_back(d.getChip(chip).getCharge(i, channel).gain());
+    m_time.push_back(d.getChip(chip).getTime(i, channel).timestamp());
+    m_charge.push_back(d.getChip(chip).getCharge(i, channel).charge());
+    m_bcid.push_back(d.getChip(chip).getBCIDs(i));
+    CellID myCellID(d.getLayer(), d.getChip(chip).getID(), i, channel);
+    std::cout << myCellID.getCellID() << std::endl;
+    std::cout << d.getLayer() << " " << myCellID.getLayerID() << " " << d.getChip(chip).getID() << " " << myCellID.getChipID() << " " << i << " " << myCellID.getMemory() << " " << channel << " " << myCellID.getChannel() << std::endl;
+    m_cellID.push_back(myCellID.getCellID());
+    m_channel.push_back(channel);
+    m_chip.push_back(d.getChip(chip).getID());
+    m_layer.push_back(d.getLayer());
+    m_memory.push_back(i);
+    if(static_cast<DetectorID>(d.getDetectorID()) == DetectorID::ECAL) m_cherenkov = -1;
+    //else { myfile << m_eventNumber << "," << d.getLayer() << "," << d.getChip(chip).getID() << "," << channel << "\n"; }
   }
 }
 
