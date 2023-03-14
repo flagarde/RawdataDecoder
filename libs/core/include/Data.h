@@ -89,7 +89,7 @@ public:
       else
         m_detectoID = DetectorID::HCAL;
 
-      m_triggerid = m_detectoID == DetectorID::ECAL ? m_Buffer[m_Buffer.size() - 43] * 0x100 + m_Buffer[m_Buffer.size() - 44] : (m_Buffer[8] & 0xff) * 256 + (m_Buffer[9] & 0xff);
+      m_triggerid = m_detectoID == DetectorID::ECAL ? m_Buffer[m_Buffer.size() - 44] * 0x100 + m_Buffer[m_Buffer.size() - 43] : (m_Buffer[8] & 0xff) * 256 + (m_Buffer[9] & 0xff);
 
       m_cycleID = ((m_Buffer[4] & 0xff) * 256 + (m_Buffer[5] & 0xff)) * 0x10000 + ((m_Buffer[6] & 0xff) * 256 + (m_Buffer[7] & 0xff));
 
