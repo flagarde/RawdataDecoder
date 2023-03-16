@@ -83,6 +83,7 @@ public:
     m_chip.clear();
     m_Layer = m_Buffer[m_Buffer.size() - 1];
     if(m_Buffer.size() == 14 || m_Buffer.size() == 16) m_isEmpty = true;
+    else if(m_Buffer.size() < 16) /* Strange format */ { m_isEmpty = true; }
     if(!empty())
     {
       if(m_Buffer.size() >= 42 && m_Buffer[m_Buffer.size() - 42] == 0xf0 && m_Buffer[m_Buffer.size() - 41] == 0x01 && m_Buffer[m_Buffer.size() - 8] == 0xf0 && m_Buffer[m_Buffer.size() - 7] == 0x02) m_detectoID = DetectorID::ECAL;
